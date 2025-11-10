@@ -7,3 +7,5 @@ export const packageJsonSchema = z
     devDependencies: z.record(z.string(), z.string()).optional(),
   })
   .loose();
+
+export type PackageJson = z.infer<typeof packageJsonSchema>;

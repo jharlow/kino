@@ -7,7 +7,7 @@ import { Command } from "commander";
 import prompts from "prompts";
 import z from "zod";
 import { kinoConfig as makeKinoConfig } from "@/kino-config/schema";
-import { stat } from "fs/promises";
+import { doesDirectoryExist } from "@/utils/does-directory-exist";
 
 const initOptionsSchema = z.object({
   cwd: z.string().optional(),
@@ -51,7 +51,7 @@ export const init = new Command()
         initial: true,
       },
     ]);
-    const prefixSrc = (await stat(join(path, "src"))).isDirectory();
+    const prefixSrc = await doesDirectoryExist(join(path, "src"));
     const { packagesPath } = await prompts([
       {
         type: "text",
