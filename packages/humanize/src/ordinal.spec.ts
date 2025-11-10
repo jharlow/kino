@@ -3,8 +3,8 @@ import { ordinal } from "./ordinal";
 
 describe(ordinal.name, () => {
   describe("ordinal value for numbers ending in zero", () => {
-    it("should return 0 if the number is 0 (cos 0th doesnt read very well)", () => {
-      expect(ordinal(0)).toEqual(0);
+    it("should return 0 if the number is 0 (0th doesnt read very well)", () => {
+      expect(ordinal(0)).toEqual("0");
     });
 
     it("should return the number with suffix th", () => {
@@ -56,6 +56,17 @@ describe(ordinal.name, () => {
       expect(ordinal(4)).toEqual("4th");
       expect(ordinal(14)).toEqual("14th");
       expect(ordinal(24)).toEqual("24th");
+    });
+  });
+
+  describe("custom number processor", () => {
+    it("should use the custom number processor if provided", () => {
+      expect(ordinal(1, { numberProcessor: (n) => `Number_${n}` })).toEqual(
+        "Number_1st"
+      );
+      expect(ordinal(22, { numberProcessor: (n) => `Num(${n})` })).toEqual(
+        "Num(22)nd"
+      );
     });
   });
 });

@@ -1,11 +1,13 @@
 import { writeFileSync } from "fs";
 import { join } from "path";
-import { getConfig, kinoConfig } from "@/config";
+import { getKinoConfig } from "@/kino-config/get-kino-config";
 import { highlighter } from "@/utils/highlighter";
 import { logger } from "@/utils/logger";
 import { Command } from "commander";
 import prompts from "prompts";
 import z from "zod";
+import { kinoConfig as makeKinoConfig } from "@/kino-config/schema";
+import { stat } from "fs/promises";
 
 const initOptionsSchema = z.object({
   cwd: z.string().optional(),
@@ -29,10 +31,10 @@ export const init = new Command()
   .action(async (unparsedOpts) => {
     const parsedOpts = initOptionsSchema.parse(unparsedOpts);
     const path = parsedOpts.cwd ?? process.cwd();
-    const result = await getConfig(path);
-    if (result !== null && !parsedOpts.force) {
+    const kinoConfig = await getKinoConfig(path);
+    if (kinoConfig !== null && !parsedOpts.force) {
       logger.error(
-        `Kino is already initialized in ${highlighter.info(result.filepath)}`
+        `Kino is already initialized in ${highlighter.info(kinoConfig.filepath)}`
       );
       logger.break();
       logger.info(
@@ -49,24 +51,21 @@ export const init = new Command()
         initial: true,
       },
     ]);
-    let packages: string | undefined;
-    if (!packages) {
-      const { packagesPath } = await prompts([
-        {
-          type: "text",
-          name: "packagesPath",
-          message: `The path to the packages directory, defaults to ${highlighter.info("kino")}`,
-          initial: "kino",
-        },
-      ]);
-      packages = packagesPath;
-    }
+    const prefixSrc = (await stat(join(path, "src"))).isDirectory();
+    const { packagesPath } = await prompts([
+      {
+        type: "text",
+        name: "packagesPath",
+        message: `The path to the directory kino should output installed packages, defaults to ${highlighter.info(`${prefixSrc ? "src/" : ""}kino`)}`,
+        initial: `${prefixSrc ? "src/" : ""}kino`,
+      },
+    ]);
     writeFileSync(
       join(path, "kino.json"),
       JSON.stringify(
-        kinoConfig({
+        makeKinoConfig({
           includeTests,
-          resolvedPaths: { packages: packages ?? "kino" },
+          resolvedPaths: { packages: packagesPath ?? "kino" },
         }),
         null,
         2

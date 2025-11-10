@@ -1,6 +1,6 @@
 {
   "resolvedPaths": {
-    "packages": "kino"
+    "packages": "src/kino"
   },
-  "includeTests": true
+  "includeTests": false
 }

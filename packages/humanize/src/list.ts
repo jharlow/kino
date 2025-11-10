@@ -38,33 +38,64 @@ export interface ListOptions {
   otherString?: string | { singular: string; plural: string };
 }
 
+const getExtra = (array: Array<string>, options?: ListOptions): number =>
+  options?.limit ? Math.max(array.length - options.limit, 0) : 0;
+
+const DEFAULT_JOINER = "and";
+
+const getJoiner = (options?: ListOptions): string =>
+  options?.joinString ?? DEFAULT_JOINER;
+
+const getOther = (
+  options?: ListOptions
+): { singular: string; plural?: string } => {
+  const otherSingular = options?.otherString
+    ? typeof options.otherString === "string"
+      ? options.otherString
+      : options.otherString.singular
+    : "other";
+  const otherPlural = options?.otherString
+    ? typeof options.otherString === "string"
+      ? undefined
+      : options.otherString.plural
+    : undefined;
+  return { singular: otherSingular, plural: otherPlural };
+};
+
+const getLimitString = (array: Array<string>, options?: ListOptions) => {
+  const extra = getExtra(array, options);
+  const joiner = getJoiner(options);
+  const { singular: otherSingular, plural: otherPlural } = getOther(options);
+  if (options?.limitString) {
+    return `${options.oxfordComma ? ", " : " "}${options.limitString}`;
+  } else {
+    return `${options?.oxfordComma ? ", " : " "}${joiner} ${extra} ${pluralize(extra, otherSingular, otherPlural)}`;
+  }
+};
+
 /**
  * Converts a list of items to a human readable string
  */
-export const list = (array: Array<string>, options?: ListOptions): string => {
-  const extra = options?.limit ? Math.max(array.length - options.limit, 0) : 0;
+export const list = (
+  /**
+   * The array of strings (items) to convert to a humanized list
+   */
+  array: Array<string>,
+  /**
+   * Options for customizing the list output
+   */
+  options?: ListOptions
+): string => {
+  const extra = getExtra(array, options);
   const listOverLimit = extra > 0;
-  const joiner = options?.joinString ?? "and";
+  const joiner = getJoiner(options);
   const listWithinLimit = array.slice(0, options?.limit);
   if (listWithinLimit.length < 2 && !listOverLimit) {
     return String(listWithinLimit);
   } else if (listWithinLimit.length === 2 && !listOverLimit) {
     return listWithinLimit.join(` ${joiner} `);
   } else if (listOverLimit) {
-    const otherSingular = options?.otherString
-      ? typeof options.otherString === "string"
-        ? options.otherString
-        : options.otherString.singular
-      : "other";
-    const otherPlural = options?.otherString
-      ? typeof options.otherString === "string"
-        ? undefined
-        : options.otherString.plural
-      : undefined;
-    const limitString = options?.limitString
-      ? `${options.oxfordComma ? "," : " "}${options.limitString}`
-      : `${options?.oxfordComma ? ", " : " "}${joiner} ${extra} ${pluralize(extra, otherSingular, otherPlural)}`;
-    return listWithinLimit.join(", ") + limitString;
+    return listWithinLimit.join(", ") + getLimitString(array, options);
   }
   return (
     array.slice(0, -1).join(", ") +
