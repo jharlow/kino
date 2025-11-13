@@ -20,3 +20,5 @@ export const logger = {
     console.log("");
   },
 };
+
+export type Logger = typeof logger;

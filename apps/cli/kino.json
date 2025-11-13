@@ -2,5 +2,6 @@
   "resolvedPaths": {
     "packages": "src/kino"
   },
-  "includeTests": false
+  "includeTests": true,
+  "packageManager": "pnpm"
 }

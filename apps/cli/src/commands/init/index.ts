@@ -1,19 +1,26 @@
 import { writeFileSync } from "fs";
 import { join } from "path";
-import { getKinoConfig } from "@/kino-config/get-kino-config";
 import { highlighter } from "@/utils/highlighter";
 import { logger } from "@/utils/logger";
 import { Command } from "commander";
 import prompts from "prompts";
 import z from "zod";
-import { kinoConfig as makeKinoConfig } from "@/kino-config/schema";
 import { doesDirectoryExist } from "@/utils/does-directory-exist";
+import { KinoContextManager } from "@/kino-context/manager";
+import {
+  PackageManager,
+  PackageManagerHandler,
+  packageManagers,
+} from "@/package-json/package-managers";
 
 const initOptionsSchema = z.object({
   cwd: z.string().optional(),
   force: z.boolean().default(false),
   packages: z.string().optional(),
 });
+
+const packageManagerHandler = new PackageManagerHandler();
+const kinoContextManager = new KinoContextManager();
 
 export const init = new Command()
   .name("init")
@@ -31,10 +38,10 @@ export const init = new Command()
   .action(async (unparsedOpts) => {
     const parsedOpts = initOptionsSchema.parse(unparsedOpts);
     const path = parsedOpts.cwd ?? process.cwd();
-    const kinoConfig = await getKinoConfig(path);
-    if (kinoConfig !== null && !parsedOpts.force) {
+    const kinoContext = await kinoContextManager.getKinoContext(path);
+    if (kinoContext !== null && !parsedOpts.force) {
       logger.error(
-        `Kino is already initialized in ${highlighter.info(kinoConfig.filepath)}`
+        `Kino is already initialized in ${highlighter.info(kinoContext.filepath)}`
       );
       logger.break();
       logger.info(
@@ -43,32 +50,38 @@ export const init = new Command()
       process.exit(0);
     }
     logger.info(`Initializing kino in ${highlighter.info(path)}`);
-    const { includeTests } = await prompts([
+    const { includeTests } = (await prompts([
       {
         type: "confirm",
         name: "includeTests",
         message: `Include ${highlighter.info("tests")} when using ${highlighter.success("kino add")}?`,
         initial: true,
       },
-    ]);
+    ])) as { includeTests: boolean };
     const prefixSrc = await doesDirectoryExist(join(path, "src"));
-    const { packagesPath } = await prompts([
+    const { packagesPath } = (await prompts([
       {
         type: "text",
         name: "packagesPath",
         message: `The path to the directory kino should output installed packages, defaults to ${highlighter.info(`${prefixSrc ? "src/" : ""}kino`)}`,
         initial: `${prefixSrc ? "src/" : ""}kino`,
       },
-    ]);
-    writeFileSync(
-      join(path, "kino.json"),
-      JSON.stringify(
-        makeKinoConfig({
-          includeTests,
-          resolvedPaths: { packages: packagesPath ?? "kino" },
-        }),
-        null,
-        2
-      )
-    );
+    ])) as { packagesPath: string };
+    const detectedPackageManager =
+      packageManagerHandler.detectActivePackageManager(path);
+    const { packageManager } = (await prompts([
+      {
+        type: "select",
+        name: "packageManager",
+        message: `Select the package manager you want to use: (detected ${highlighter.info(detectedPackageManager)})`,
+        choices: packageManagers.map((pm) => ({ title: pm, value: pm })),
+        initial: packageManagers.indexOf(detectedPackageManager),
+      },
+    ])) as { packageManager: PackageManager };
+    await kinoContextManager.writeKinoJson(path, {
+      includeTests,
+      resolvedPaths: { packages: packagesPath ?? "kino" },
+      packageManager,
+    });
+    logger.success("Kino has been initialized successfully in your project!");
   });

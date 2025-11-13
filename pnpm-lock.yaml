@@ -38,6 +38,9 @@ importers:
       zod:
         specifier: ^4.1.12
         version: 4.1.12
+      zx:
+        specifier: ^8.8.5
+        version: 8.8.5
     devDependencies:
       '@types/node':
         specifier: ^24.10.0
@@ -914,6 +917,11 @@ packages:
   zod@4.1.12:
     resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
+  zx@8.8.5:
+    resolution: {integrity: sha512-SNgDF5L0gfN7FwVOdEFguY3orU5AkfFZm9B5YSHog/UDHv+lvmd82ZAsOenOkQixigwH2+yyH198AwNdKhj+RA==}
+    engines: {node: '>= 12.17.0'}
+    hasBin: true
+
 snapshots:
 
   '@babel/code-frame@7.27.1':
@@ -1635,3 +1643,5 @@ snapshots:
   yoctocolors@2.1.2: {}
 
   zod@4.1.12: {}
+
+  zx@8.8.5: {}

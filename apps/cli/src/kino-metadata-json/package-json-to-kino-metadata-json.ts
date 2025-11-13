@@ -1,4 +1,4 @@
-import { KinoMetadataJson } from "@/kino-metadata-json/schema";
+import { KinoMetadataJson } from "@/kino-metadata-json/metadata-json";
 import { PackageJson } from "@/package-json/schema";
 
 export const kinoPackageJsonToMetadataJson = (
