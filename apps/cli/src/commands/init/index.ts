@@ -1,4 +1,3 @@
-import { writeFileSync } from "fs";
 import { join } from "path";
 import { highlighter } from "@/utils/highlighter";
 import { logger } from "@/utils/logger";

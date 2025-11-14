@@ -1,6 +1,7 @@
 import { notNull } from "@/utils/not-null";
 import fs from "fs";
 import path from "path";
+import { PackageIdentifier } from "./manager";
 
 export enum PackageManager {
   NPM = "npm",
@@ -26,7 +27,7 @@ export interface IPackageManagerHandler {
 export class PackageManagerHandler implements IPackageManagerHandler {
   getInstallCommand(
     packageManager: PackageManager,
-    packages: string[],
+    packages: Array<string | PackageIdentifier>,
     options: InstallCommandOptions = { devDependency: false }
   ): string {
     const packageManagerBaseProgram: Record<PackageManager, string> = {
@@ -50,7 +51,11 @@ export class PackageManagerHandler implements IPackageManagerHandler {
     const devArg = options.devDependency
       ? packageManagersDevDependencyArgument[packageManager]
       : null;
-    const packageList = packages.join(" ");
+    const packageList = packages
+      .map((pkg) =>
+        typeof pkg === "string" ? pkg : `${pkg.packageName}@${pkg.version}`
+      )
+      .join(" ");
     return [program, command, devArg, packageList].filter(notNull).join(" ");
   }
 
