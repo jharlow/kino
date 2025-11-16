@@ -1,5 +1,10 @@
 /**
  * Conditionally returns the plural vs singular form of a word based on a supplied count
+ *
+ * @param count The count of the singular form in this instance
+ * @param singular The singular form of the word
+ * @param plural Optional: the plural form of the singular
+ * @returns The appropriate singular or plural form based on the count
  */
 export const pluralize = (
   /**

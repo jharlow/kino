@@ -3,7 +3,7 @@ import { ordinal } from "./ordinal";
 
 describe(ordinal.name, () => {
   describe("ordinal value for numbers ending in zero", () => {
-    it("should return 0 if the number is 0 (0th doesnt read very well)", () => {
+    it("should return 0 if the number is 0 (0th doesn't read very well)", () => {
       expect(ordinal(0)).toEqual("0");
     });
 

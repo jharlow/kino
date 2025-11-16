@@ -8,3 +8,9 @@ Restrictions
 
 - NO internal dependencies (avoid recursion in the add CLI, keeps each package decoupled and well scoped)
 - NO fancy testing stuff (avoids needing to worry about missing dev dependencies, keeps API broadly compatible with jest)
+
+# Code style
+
+## Documentation
+
+-

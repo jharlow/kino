@@ -75,6 +75,10 @@ const getLimitString = (array: Array<string>, options?: ListOptions) => {
 
 /**
  * Converts a list of items to a human readable string
+ *
+ * @param array The array of strings (items) to convert to a humanized list
+ * @param options Options for customizing the list output
+ * @returns A humanized string representation of the list
  */
 export const list = (
   /**

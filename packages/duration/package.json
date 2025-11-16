@@ -1,7 +1,7 @@
 {
-  "name": "@kino/humanize",
+  "name": "@kino/duration",
   "version": "1.0.0",
-  "description": "Minimal string humanizing utilities",
+  "description": "Minimal duration conversion utilities",
   "main": "index.js",
   "scripts": {
     "test": "vitest",
@@ -15,9 +15,5 @@
     "@vitest/coverage-v8": "^4.0.8",
     "vitest": "^4.0.8"
   },
-  "dependencies": {
-    "graphql": "^16.12.0",
-    "ms": "^2.1.3",
-    "zx": "^7.1.1"
-  }
+  "dependencies": {}
 }

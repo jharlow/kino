@@ -301,6 +301,7 @@ export class KinoPackageManager implements IKinoPackageManager {
       fs.mkdirSync(inboundLocalDirectory, { recursive: true });
       for (const file of kinoPackageData.files) {
         const destPath = path.join(inboundLocalDirectory, file.filePath);
+        fs.mkdirSync(path.dirname(destPath), { recursive: true });
         fs.writeFileSync(destPath, file.content);
       }
       fs.writeFileSync(

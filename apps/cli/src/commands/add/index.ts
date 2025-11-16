@@ -56,7 +56,7 @@ export const add = new Command()
       const result = await kinoPackageManager.installPackage(
         kinoPackageName,
         kinoContext,
-        { force: options.force ?? false, packageSource: PackageSource.Local }
+        { force: options.force ?? false, packageSource: PackageSource.Remote }
       );
       if (result.success) {
         packagesAdded.push(result.packageName);
