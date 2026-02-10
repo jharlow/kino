@@ -1,0 +1,19 @@
+{
+  "name": "@kino/markdown",
+  "version": "1.0.0",
+  "description": "Minimal markdown builder",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@vitest/coverage-v8": "^4.0.8",
+    "vitest": "^4.0.8"
+  },
+  "dependencies": {}
+}
