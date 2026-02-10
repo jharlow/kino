@@ -1,3 +1,5 @@
+import { type EmojiShortname } from "./emojis";
+
 export interface StringReadable {
   [Symbol.toPrimitive](hint: "default" | "string" | "number"): string;
   toString(): string;
@@ -190,11 +192,47 @@ export class MarkdownDocument implements StringReadable {
     this.$lines.push(...lines);
   }
 
+  private collectFootnotes(): MarkdownFootnoteBlock[] {
+    const footnotes: MarkdownFootnoteBlock[] = [];
+    const walk = (item: unknown) => {
+      if (item instanceof MarkdownFootnoteBlock) {
+        footnotes.push(item);
+      }
+      if (item instanceof MarkdownMultilineBlock) {
+        item.$lines.forEach(walk);
+      } else if (item instanceof MarkdownLineBlock) {
+        item.$line.forEach(walk);
+      } else if (item instanceof MarkdownInlineBlock) {
+        item.$content.forEach(walk);
+      }
+    };
+    this.$lines.forEach(walk);
+    return footnotes;
+  }
+
   private render(): string {
-    return this.$lines
+    const footnotes = this.collectFootnotes();
+
+    let counter = 1;
+    for (const fn of footnotes) {
+      if (!fn.$identifier && !fn.$multiline.isEmpty) {
+        fn.$identifier = String(counter++);
+      }
+    }
+
+    const body = this.$lines
       .map((block) => (block instanceof MarkdownBlock ? block.render() : block))
       .filter((block) => block !== null)
       .join("\n");
+
+    if (footnotes.length === 0) return body;
+
+    const definitions = footnotes
+      .map((fn) => fn.renderDefinition())
+      .filter((d) => d !== null)
+      .join("\n");
+
+    return definitions ? `${body}\n\n${definitions}` : body;
   }
 
   [Symbol.toPrimitive](hint: "default" | "string" | "number"): string {
@@ -601,40 +639,77 @@ export const bq = blockquote;
 
 export class MarkdownFootnoteBlock extends MarkdownInlineBlock {
   public $identifier: string | undefined;
+  public $multiline = new MarkdownMultilineBlock();
+
+  constructor(...lines: Array<MarkdownMultilineBlockContent>) {
+    super();
+    this.$multiline.$lines.push(...lines);
+  }
 
   private validateIdentifier(value: string): boolean {
     return /^[a-zA-Z0-9]+$/.test(value);
   }
 
   identifier(value: string): this {
-    const content = super.render();
-    if (!this.validateIdentifier(value) || content === null || this.isEmpty)
-      return this;
+    if (!this.validateIdentifier(value)) return this;
     if (this.$identifier) return this;
     this.$identifier = value;
     return this;
   }
 
   render(): string | null {
-    const content = super.render();
-    if (
-      !this.$identifier ||
-      !this.validateIdentifier(this.$identifier) ||
-      content === null ||
-      this.isEmpty
-    )
+    if (!this.$identifier || this.$multiline.isEmpty) return null;
+    return `[^${this.$identifier}]`;
+  }
+
+  renderDefinition(): string | null {
+    const content = this.$multiline.render();
+    if (!this.$identifier || content === null || this.$multiline.isEmpty)
       return null;
-    return `[^${this.$identifier}`;
+    return `[^${this.$identifier}]: ${content}`;
   }
 }
 
 export const footnote = (
-  ...content: Array<MarkdownInlineBlockContent>
+  ...lines: Array<MarkdownMultilineBlockContent>
 ): MarkdownFootnoteBlock => {
-  return new MarkdownFootnoteBlock(...content);
+  return new MarkdownFootnoteBlock(...lines);
 };
 export const foot = footnote;
 export const fn = footnote;
+
+export class MarkdownLineBreakBlock extends MarkdownLineBlock {
+  constructor() {
+    super();
+  }
+
+  render(): string | null {
+    return "";
+  }
+}
+
+export const lineBreak = (): MarkdownLineBreakBlock => {
+  return new MarkdownLineBreakBlock();
+};
+export const br = lineBreak;
+
+export class MarkdownEmojiBlock extends MarkdownInlineBlock {
+  private $emoji: EmojiShortname;
+
+  constructor(emoji: EmojiShortname) {
+    super();
+    this.$emoji = emoji;
+  }
+
+  render(): string | null {
+    return `:${this.$emoji}:`;
+  }
+}
+
+export const emoji = (emoji: EmojiShortname): MarkdownEmojiBlock => {
+  return new MarkdownEmojiBlock(emoji);
+};
+export const e = emoji;
 
 export const m = {
   document,
@@ -670,6 +745,8 @@ export const m = {
   img,
   list,
   li,
+  emoji,
+  e,
   codeblock,
   code,
   horizontalRule,
@@ -678,13 +755,15 @@ export const m = {
   footnote,
   foot,
   fn,
+  lineBreak,
+  br,
 };
 
 /**
  * 
 Headings X
 Paragraphs X
-Line Breaks
+Line Breaks X
 Emphasis X
 Blockquotes X
 Lists X
@@ -695,35 +774,15 @@ Images X
 
 Tables
 Fenced Code Blocks X
-Footnotes
+Footnotes X
 Heading IDs X
 Definition Lists
 Strikethrough X
 Task Lists X
-Emoji
+Emoji X
 Highlight X
 Subscript X
 Superscript X
- * DONE:
- * bold
- * italic
- * link
- * image
- * code
- * heading
- * paragraph
- * codeblock
- * ordered list
- * unordered list
- * horizontal rule
- * task list
- *
- *
- * TODO:
- * strikethrough
- * footnote
- * blockquote
- * table
- * details
+
  *
  */
