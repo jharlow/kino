@@ -180,18 +180,7 @@ export class MarkdownMultilineBlock<
   }
 }
 
-export type MarkdownDocumentContent =
-  | string
-  | MarkdownInlineBlock
-  | MarkdownLineBlock
-  | MarkdownMultilineBlock;
-export class MarkdownDocument implements StringReadable {
-  public $lines: Array<MarkdownDocumentContent> = [];
-
-  constructor(...lines: Array<MarkdownDocumentContent>) {
-    this.$lines.push(...lines);
-  }
-
+export class MarkdownSectionBlock extends MarkdownMultilineBlock {
   private collectFootnotes(): MarkdownFootnoteBlock[] {
     const footnotes: MarkdownFootnoteBlock[] = [];
     const walk = (item: unknown) => {
@@ -210,9 +199,10 @@ export class MarkdownDocument implements StringReadable {
     return footnotes;
   }
 
-  private render(): string {
-    const footnotes = this.collectFootnotes();
+  [Symbol.toPrimitive](hint: "default" | "string" | "number"): string {
+    if (hint === "number") return this.$lines.length.toString();
 
+    const footnotes = this.collectFootnotes();
     let counter = 1;
     for (const fn of footnotes) {
       if (!fn.$identifier && !fn.$multiline.isEmpty) {
@@ -220,10 +210,7 @@ export class MarkdownDocument implements StringReadable {
       }
     }
 
-    const body = this.$lines
-      .map((block) => (block instanceof MarkdownBlock ? block.render() : block))
-      .filter((block) => block !== null)
-      .join("\n");
+    const body = this.render() ?? "";
 
     if (footnotes.length === 0) return body;
 
@@ -234,21 +221,7 @@ export class MarkdownDocument implements StringReadable {
 
     return definitions ? `${body}\n\n${definitions}` : body;
   }
-
-  [Symbol.toPrimitive](hint: "default" | "string" | "number"): string {
-    if (hint === "string") return this.render();
-    if (hint === "number") return this.$lines.length.toString();
-    return this.render();
-  }
 }
-
-export const document = (...lines: Array<MarkdownDocumentContent>) => {
-  return new MarkdownDocument(...lines);
-};
-export const doc = document;
-export const d = document;
-
-export class MarkdownSectionBlock extends MarkdownMultilineBlock {}
 
 export const section = (
   ...lines: Array<MarkdownMultilineBlockContent>
@@ -257,6 +230,15 @@ export const section = (
 };
 export const sec = section;
 export const s = section;
+
+export type MarkdownDocumentContent = MarkdownMultilineBlockContent;
+export class MarkdownDocument extends MarkdownSectionBlock {}
+
+export const document = (...lines: Array<MarkdownDocumentContent>) => {
+  return new MarkdownDocument(...lines);
+};
+export const doc = document;
+export const d = document;
 
 export class MarkdownParagraphBlock extends MarkdownInlineBlock {}
 
@@ -445,64 +427,125 @@ export const link = (
 };
 const url = link;
 
-export type MarkdownListType = "ul" | "ol";
-export type MarkdownListStyle = "*" | "-" | "+";
-export class MarkdownListBlock extends MarkdownMultilineBlock<{
-  excludeMultiline: true;
-}> {
-  private $type: MarkdownListType = "ul";
-  private $style: MarkdownListStyle | undefined;
-  private $defaultStyle: MarkdownListStyle = "-";
+export type MarkdownUnorderedListItemStyle = "*" | "-" | "+";
 
-  ordered(): this {
-    this.$type = "ol";
-    return this;
-  }
+export class MarkdownUnorderedListItemBlock extends MarkdownLineBlock {
+  $style: MarkdownUnorderedListItemStyle | undefined;
+  private $defaultStyle: MarkdownUnorderedListItemStyle = "-";
 
-  unordered(): this {
-    this.$type = "ul";
-    return this;
-  }
-
-  style(opt: MarkdownListStyle): this {
+  style(opt: MarkdownUnorderedListItemStyle): this {
     this.$style = opt;
     return this;
   }
 
   render(): string | null {
-    if (this.isEmpty) return null;
-    return `${this.$lines
-      .map((line, index) => {
-        const content = line instanceof MarkdownBlock ? line.render() : line;
-        if (content === null) return null;
-        return this.$type === "ol"
-          ? `${index + 1}. ${content}`
-          : `${this.$style ?? this.$defaultStyle} ${content}`;
-      })
-      .join("\n")}`;
+    const content = super.render();
+    if (content === null) return null;
+    return `${this.$style ?? this.$defaultStyle} ${content}`;
   }
 }
 
-export const list = (
-  ...lines: Array<MarkdownLineBlockContent | MarkdownLineBlock>
-): MarkdownListBlock => {
-  return new MarkdownListBlock(...lines);
+export const unorderedListItem = (
+  ...line: Array<MarkdownLineBlockContent>
+): MarkdownUnorderedListItemBlock => {
+  return new MarkdownUnorderedListItemBlock(...line);
 };
-export const li = list;
+export const u = unorderedListItem;
 
-type MarkdownTaskBlockStyle = "x" | "X";
-export class MarkdownTaskBlock extends MarkdownLineBlock {
+export class MarkdownUnorderedListBlock extends MarkdownMultilineBlock {
+  constructor(...lines: Array<MarkdownLineBlockContent>) {
+    super(...lines.map((line) => new MarkdownUnorderedListItemBlock(line)));
+  }
+
+  style(opt: MarkdownUnorderedListItemStyle): this {
+    this.$lines.forEach((line) => {
+      if (line instanceof MarkdownUnorderedListItemBlock) {
+        line.style(opt);
+      }
+    });
+    return this;
+  }
+}
+
+export const unorderedList = (
+  ...lines: Array<MarkdownLineBlockContent>
+): MarkdownUnorderedListBlock => {
+  return new MarkdownUnorderedListBlock(...lines);
+};
+export const ul = unorderedList;
+
+export class MarkdownOrderedListItemBlock extends MarkdownLineBlock {
+  $index: number;
+
+  constructor(index: number, ...line: Array<MarkdownLineBlockContent>) {
+    super(...line);
+    this.$index = index;
+  }
+
+  index(value: number): this {
+    this.$index = value;
+    return this;
+  }
+
+  render(): string | null {
+    const content = super.render();
+    if (content === null || this.isEmpty) return null;
+    return `${this.$index}. ${content}`;
+  }
+}
+
+const orderedListItem = (
+  index: number,
+  ...line: Array<MarkdownLineBlockContent>
+): MarkdownOrderedListItemBlock => {
+  return new MarkdownOrderedListItemBlock(index, ...line);
+};
+export const o = orderedListItem;
+
+export class MarkdownOrderedListBlock extends MarkdownMultilineBlock {
+  startingIndex(value: number): this {
+    this.$lines.forEach((line, index) => {
+      if (line instanceof MarkdownOrderedListItemBlock) {
+        line.index(index + value);
+      }
+    });
+    return this;
+  }
+
+  constructor(...lines: Array<MarkdownLineBlockContent>) {
+    super(
+      ...lines.map(
+        (line, index) => new MarkdownOrderedListItemBlock(index + 1, line),
+      ),
+    );
+  }
+}
+
+export const orderedList = (
+  ...lines: Array<MarkdownLineBlockContent>
+): MarkdownOrderedListBlock => {
+  return new MarkdownOrderedListBlock(...lines);
+};
+export const ol = orderedList;
+
+type MarkdownTaskItemBlockStyle = "x" | "X";
+export class MarkdownTaskItemBlock extends MarkdownLineBlock {
   private $checked: boolean = false;
-  private $style: MarkdownTaskBlockStyle | undefined;
-  private $defaultStyle: MarkdownTaskBlockStyle = "x";
+  private $style: MarkdownTaskItemBlockStyle | undefined;
+  private $defaultStyle: MarkdownTaskItemBlockStyle = "x";
 
   constructor(checked: boolean, ...line: Array<MarkdownLineBlockContent>) {
     super(...line);
     this.$checked = checked;
   }
 
-  style(opt: MarkdownTaskBlockStyle): this {
+  style(opt: MarkdownTaskItemBlockStyle): this {
     this.$style = opt;
+    return this;
+  }
+
+  checked(value: boolean): this {
+    this.$checked = value;
     return this;
   }
 
@@ -513,11 +556,37 @@ export class MarkdownTaskBlock extends MarkdownLineBlock {
   }
 }
 
-export const task = (
+export const taskItem = (
   checked: boolean,
   ...line: Array<MarkdownLineBlockContent>
-): MarkdownTaskBlock => {
-  return new MarkdownTaskBlock(checked, ...line);
+): MarkdownTaskItemBlock => {
+  return new MarkdownTaskItemBlock(checked, ...line);
+};
+export const t = taskItem;
+
+export class MarkdownTaskListBlock extends MarkdownMultilineBlock {
+  style(opt: MarkdownTaskItemBlockStyle): this {
+    this.$lines.forEach((line) => {
+      if (line instanceof MarkdownTaskItemBlock) {
+        line.style(opt);
+      }
+    });
+    return this;
+  }
+
+  constructor(...lines: Array<[boolean, ...MarkdownLineBlockContent[]]>) {
+    super(
+      ...lines.map(
+        ([checked, ...line]) => new MarkdownTaskItemBlock(checked, ...line),
+      ),
+    );
+  }
+}
+
+export const tasks = (
+  ...lines: Array<[boolean, ...MarkdownLineBlockContent[]]>
+): MarkdownTaskListBlock => {
+  return new MarkdownTaskListBlock(...lines);
 };
 
 export type MarkdownCodeBlockLanguage = string;
@@ -743,15 +812,27 @@ export const m = {
   url,
   image,
   img,
-  list,
-  li,
+  list: {
+    unordered: unorderedList,
+    ul,
+    ordered: orderedList,
+    ol,
+    tasks,
+  },
+  listItem: {
+    unordered: unorderedListItem,
+    u,
+    ordered: orderedListItem,
+    o,
+    task: taskItem,
+    t,
+  },
   emoji,
   e,
   codeblock,
   code,
   horizontalRule,
   hr,
-  task,
   footnote,
   foot,
   fn,
