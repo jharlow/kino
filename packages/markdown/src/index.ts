@@ -5,15 +5,81 @@ export interface StringReadable {
   toString(): string;
 }
 
+export type PrimitiveValues = string | number | boolean | null | undefined;
+
+export interface RenderingOptions {
+  renderNullish: boolean;
+  lineJoinString: string;
+}
+
+export type OptionalRenderingOptions = Partial<RenderingOptions>;
+
+export type BooleanCoercibleValue =
+  | boolean
+  | null
+  | undefined
+  | string
+  | number;
+
 export abstract class MarkdownBlock implements StringReadable {
-  readonly _EMPTY_STRING = "";
-  readonly _SPACE_STRING = " ";
+  protected readonly _EMPTY_STRING = "";
+  protected readonly _SPACE_STRING = " ";
+
+  protected $renderingOptions: RenderingOptions | undefined;
+  protected readonly _defaultRenderingOptions: RenderingOptions = {
+    renderNullish: false,
+    lineJoinString: this._EMPTY_STRING,
+  };
+
+  public setRenderingOptions(options: OptionalRenderingOptions): this {
+    this.$renderingOptions = {
+      ...this._defaultRenderingOptions,
+      ...this.$renderingOptions,
+      ...options,
+    };
+    return this;
+  }
+
+  protected getRenderingOptions(
+    options?: OptionalRenderingOptions,
+  ): RenderingOptions {
+    return {
+      ...this._defaultRenderingOptions,
+      ...this.$renderingOptions,
+      ...options,
+    };
+  }
+
+  protected shouldFilter(
+    value: unknown,
+    options?: OptionalRenderingOptions,
+  ): boolean {
+    const { renderNullish } = this.getRenderingOptions(options);
+    if (!renderNullish && (value === null || value === undefined)) return false;
+    return true;
+  }
+
   abstract isEmpty: boolean;
-  abstract render(): string | null;
+  abstract render(options?: OptionalRenderingOptions): string | null;
+
+  protected isPrimitive(value: unknown): value is PrimitiveValues {
+    if (typeof value === "string") return true;
+    if (typeof value === "number") return true;
+    if (typeof value === "boolean") return true;
+    if (value === null) return true;
+    if (value === undefined) return true;
+    return false;
+  }
+
+  protected isPrimitiveEmpty(value: PrimitiveValues): boolean {
+    return value === null || value === undefined || value === "";
+  }
+
   abstract [Symbol.toPrimitive](hint: "default" | "string" | "number"): string;
 }
 
-export type MarkdownInlineBlockContent = string | MarkdownInlineBlock;
+export type MarkdownInlineBlockContent = PrimitiveValues | MarkdownInlineBlock;
+
 export class MarkdownInlineBlock extends MarkdownBlock {
   public $content: Array<MarkdownInlineBlockContent> = [];
 
@@ -22,17 +88,14 @@ export class MarkdownInlineBlock extends MarkdownBlock {
     this.$content.push(...content);
   }
 
-  $if(condition: boolean): this {
-    if (condition) return this;
+  if(condition: BooleanCoercibleValue): this {
+    if (Boolean(condition)) return this;
     this.$content = [];
     return this;
   }
 
-  $alt(
-    condition: boolean,
-    ...content: Array<MarkdownInlineBlockContent>
-  ): this {
-    if (!condition) return this;
+  default(...content: Array<MarkdownInlineBlockContent>): this {
+    if (!this.isEmpty) return this;
     this.$content = content;
     return this;
   }
@@ -41,26 +104,88 @@ export class MarkdownInlineBlock extends MarkdownBlock {
     return (
       this.$content.length === 0 ||
       this.$content.every((block) =>
-        block instanceof MarkdownBlock ? block.isEmpty : block.length === 0,
+        block instanceof MarkdownBlock
+          ? block.isEmpty
+          : this.isPrimitiveEmpty(block),
       )
     );
   }
 
-  render(): string | null {
+  bold() {
+    return new MarkdownBoldBlock(this);
+  }
+  b() {
+    return this.bold();
+  }
+
+  italic() {
+    return new MarkdownItalicBlock(this);
+  }
+  i() {
+    return this.italic();
+  }
+
+  strikethrough() {
+    return new MarkdownStrikethroughBlock(this);
+  }
+  st() {
+    return this.strikethrough();
+  }
+
+  highlight() {
+    return new MarkdownHighlightBlock(this);
+  }
+  hl() {
+    return this.highlight();
+  }
+
+  subscript() {
+    return new MarkdownSubscriptBlock();
+  }
+  sub() {
+    return this.subscript();
+  }
+
+  superscript() {
+    return new MarkdownSuperscriptBlock(this);
+  }
+  sup() {
+    return this.superscript();
+  }
+
+  link(url: string) {
+    return new MarkdownLinkBlock(url, this);
+  }
+  url(url: string) {
+    return this.link(url);
+  }
+
+  image(src: string) {
+    return new MarkdownImageBlock(src, this);
+  }
+  img(src: string) {
+    return this.image(src);
+  }
+
+  render(options?: OptionalRenderingOptions): string | null {
     if (this.isEmpty) return null;
+    const { lineJoinString } = this.getRenderingOptions(options);
     return this.$content
-      .map((block) => (block instanceof MarkdownBlock ? block.render() : block))
-      .join(this._EMPTY_STRING);
+      .filter((line) => this.shouldFilter(line, options))
+      .map((block) =>
+        block instanceof MarkdownBlock ? block.render(options) : String(block),
+      )
+      .join(lineJoinString);
   }
 
   [Symbol.toPrimitive](hint: "default" | "string" | "number"): string {
-    if (hint === "string") return this.render() ?? "";
+    if (hint === "string") return this.render(this.getRenderingOptions()) ?? "";
     if (hint === "number") return this.$content.length.toString();
-    return this.render() ?? "";
+    return this.render(this.getRenderingOptions()) ?? "";
   }
 }
 
-export type MarkdownLineBlockContent = string | MarkdownInlineBlock;
+export type MarkdownLineBlockContent = PrimitiveValues | MarkdownInlineBlock;
 export class MarkdownLineBlock extends MarkdownBlock {
   public $line: Array<MarkdownLineBlockContent> = [];
 
@@ -69,14 +194,14 @@ export class MarkdownLineBlock extends MarkdownBlock {
     this.$line.push(...line);
   }
 
-  $if(condition: boolean): this {
-    if (condition) return this;
+  if(condition: BooleanCoercibleValue): this {
+    if (Boolean(condition)) return this;
     this.$line = [];
     return this;
   }
 
-  $alt(condition: boolean, ...line: Array<MarkdownLineBlockContent>): this {
-    if (!condition) return this;
+  default(...line: Array<MarkdownLineBlockContent>): this {
+    if (!this.isEmpty) return this;
     this.$line = line;
     return this;
   }
@@ -85,22 +210,28 @@ export class MarkdownLineBlock extends MarkdownBlock {
     return (
       this.$line.length === 0 ||
       this.$line.every((block) =>
-        block instanceof MarkdownBlock ? block.isEmpty : block.length === 0,
+        block instanceof MarkdownBlock
+          ? block.isEmpty
+          : this.isPrimitiveEmpty(block),
       )
     );
   }
 
-  render(): string | null {
+  render(options?: OptionalRenderingOptions): string | null {
     if (this.isEmpty) return null;
+    const { lineJoinString } = this.getRenderingOptions(options);
     return this.$line
-      .map((line) => (line instanceof MarkdownBlock ? line.render() : line))
-      .join(this._EMPTY_STRING);
+      .filter((line) => this.shouldFilter(line, options))
+      .map((line) =>
+        line instanceof MarkdownBlock ? line.render(options) : line,
+      )
+      .join(lineJoinString);
   }
 
   [Symbol.toPrimitive](hint: "default" | "string" | "number"): string {
-    if (hint === "string") return this.render() ?? "";
+    if (hint === "string") return this.render(this.getRenderingOptions()) ?? "";
     if (hint === "number") return this.$line.length.toString();
-    return this.render() ?? "";
+    return this.render(this.getRenderingOptions()) ?? "";
   }
 }
 
@@ -110,8 +241,12 @@ export type MarkdownMultilineBlockOptions = {
 export type MarkdownMultilineBlockContent<
   OPTS extends MarkdownMultilineBlockOptions = { excludeMultiline: false },
 > = OPTS["excludeMultiline"] extends true
-  ? string | MarkdownInlineBlock | MarkdownLineBlock
-  : string | MarkdownInlineBlock | MarkdownLineBlock | MarkdownMultilineBlock;
+  ? PrimitiveValues | MarkdownInlineBlock | MarkdownLineBlock
+  :
+      | PrimitiveValues
+      | MarkdownInlineBlock
+      | MarkdownLineBlock
+      | MarkdownMultilineBlock;
 export class MarkdownMultilineBlock<
   OPTS extends MarkdownMultilineBlockOptions = { excludeMultiline: false },
 > extends MarkdownBlock {
@@ -123,14 +258,14 @@ export class MarkdownMultilineBlock<
     this.$lines.push(...lines);
   }
 
-  $if(condition: boolean): this {
-    if (condition) return this;
+  if(condition: BooleanCoercibleValue): this {
+    if (Boolean(condition)) return this;
     this.$lines = [];
     return this;
   }
 
-  $alt(condition: boolean, ...lines: Array<MarkdownLineBlockContent>): this {
-    if (!condition) return this;
+  default(...lines: Array<MarkdownLineBlockContent>): this {
+    if (!this.isEmpty) return this;
     this.$lines = lines;
     return this;
   }
@@ -147,16 +282,19 @@ export class MarkdownMultilineBlock<
     return (
       this.$lines.length === 0 ||
       this.$lines.every((line) =>
-        line instanceof MarkdownBlock ? line.isEmpty : line.length === 0,
+        line instanceof MarkdownBlock
+          ? line.isEmpty
+          : this.isPrimitiveEmpty(line),
       )
     );
   }
 
-  render(): string | null {
+  render(options?: OptionalRenderingOptions): string | null {
     if (this.isEmpty) return null;
     return this.$lines
+      .filter((line) => this.shouldFilter(line, options))
       .map((line) => {
-        if (typeof line === "string") return line;
+        if (this.isPrimitive(line)) return line;
         if (line instanceof MarkdownSectionBlock) {
           line.depth = this.$depth + 1;
         }
@@ -167,16 +305,15 @@ export class MarkdownMultilineBlock<
           ) as MarkdownHeadingLevel;
           line.level(safeLevel);
         }
-        return line.render();
+        return line.render(options);
       })
-      .filter((line) => line !== null)
       .join("\n");
   }
 
   [Symbol.toPrimitive](hint: "default" | "string" | "number"): string {
-    if (hint === "string") return this.render() ?? "";
+    if (hint === "string") return this.render(this.getRenderingOptions()) ?? "";
     if (hint === "number") return this.$lines.length.toString();
-    return this.render() ?? "";
+    return this.render(this.getRenderingOptions()) ?? "";
   }
 }
 
@@ -205,12 +342,12 @@ export class MarkdownSectionBlock extends MarkdownMultilineBlock {
     const footnotes = this.collectFootnotes();
     let counter = 1;
     for (const fn of footnotes) {
-      if (!fn.$identifier && !fn.$multiline.isEmpty) {
+      if (!fn.$identifier && !fn.$footer.isEmpty) {
         fn.$identifier = String(counter++);
       }
     }
 
-    const body = this.render() ?? "";
+    const body = this.render(this.getRenderingOptions()) ?? "";
 
     if (footnotes.length === 0) return body;
 
@@ -228,8 +365,6 @@ export const section = (
 ): MarkdownSectionBlock => {
   return new MarkdownSectionBlock(...lines);
 };
-export const sec = section;
-export const s = section;
 
 export type MarkdownDocumentContent = MarkdownMultilineBlockContent;
 export class MarkdownDocument extends MarkdownSectionBlock {}
@@ -237,8 +372,6 @@ export class MarkdownDocument extends MarkdownSectionBlock {}
 export const document = (...lines: Array<MarkdownDocumentContent>) => {
   return new MarkdownDocument(...lines);
 };
-export const doc = document;
-export const d = document;
 
 export class MarkdownParagraphBlock extends MarkdownInlineBlock {}
 
@@ -247,16 +380,28 @@ export const paragraph = (
 ): MarkdownParagraphBlock => {
   return new MarkdownParagraphBlock(...line);
 };
-export const para = paragraph;
-export const p = paragraph;
+
+export class MarkdownLiteral extends MarkdownInlineBlock {}
+
+export function md(
+  strings: TemplateStringsArray,
+  ...exprs: Array<MarkdownLineBlockContent>
+): MarkdownLiteral {
+  let result = "";
+  for (let i = 0; i < strings.length; i++) {
+    result += strings[i];
+    if (i < exprs.length) result += String(exprs[i]);
+  }
+  return new MarkdownLiteral(result);
+}
 
 export type MarkdownHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export class MarkdownHeadingBlock extends MarkdownLineBlock {
-  private $level: MarkdownHeadingLevel | undefined;
-  private $defaultLevel: MarkdownHeadingLevel = 1;
+  public $level: MarkdownHeadingLevel | undefined;
+  private _defaultLevel: MarkdownHeadingLevel = 1;
 
-  private $id: string | undefined;
+  public $id: string | undefined;
 
   id(value: string): this {
     if (this.$id) return this;
@@ -270,10 +415,10 @@ export class MarkdownHeadingBlock extends MarkdownLineBlock {
     return this;
   }
 
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null || this.isEmpty) return null;
-    return `${"#".repeat(this.$level ?? this.$defaultLevel)} ${super.render()}${this.$id ? ` {#${this.$id}}` : ""}`;
+    return `${"#".repeat(this.$level ?? this._defaultLevel)} ${super.render(options)}${this.$id ? ` {#${this.$id}}` : ""}`;
   }
 }
 
@@ -282,23 +427,21 @@ export const heading = (
 ): MarkdownHeadingBlock => {
   return new MarkdownHeadingBlock(...line);
 };
-export const head = heading;
-export const h = heading;
 
 export type MarkdownBoldStyle = "**" | "__";
 export class MarkdownBoldBlock extends MarkdownInlineBlock {
-  private $style: MarkdownBoldStyle | undefined;
-  private $defaultStyle: MarkdownBoldStyle = "**";
+  public $style: MarkdownBoldStyle | undefined;
+  private _defaultStyle: MarkdownBoldStyle = "**";
 
   style(opt: MarkdownBoldStyle): this {
     this.$style = opt;
     return this;
   }
 
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null || this.isEmpty) return null;
-    return `${this.$style ?? this.$defaultStyle}${content}${this.$style ?? this.$defaultStyle}`;
+    return `${this.$style ?? this._defaultStyle}${content}${this.$style ?? this._defaultStyle}`;
   }
 }
 
@@ -307,22 +450,21 @@ export const bold = (
 ): MarkdownBoldBlock => {
   return new MarkdownBoldBlock(...content);
 };
-export const b = bold;
 
 export type MarkdownItalicStyle = "*" | "_";
 export class MarkdownItalicBlock extends MarkdownInlineBlock {
-  private $style: MarkdownItalicStyle | undefined;
-  private $defaultStyle: MarkdownItalicStyle = "*";
+  public $style: MarkdownItalicStyle | undefined;
+  private _defaultStyle: MarkdownItalicStyle = "*";
 
   style(opt: MarkdownItalicStyle): this {
     this.$style = opt;
     return this;
   }
 
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null || this.isEmpty) return null;
-    return `${this.$style ?? this.$defaultStyle}${content}${this.$style ?? this.$defaultStyle}`;
+    return `${this.$style ?? this._defaultStyle}${content}${this.$style ?? this._defaultStyle}`;
   }
 }
 
@@ -331,11 +473,10 @@ export const italic = (
 ): MarkdownItalicBlock => {
   return new MarkdownItalicBlock(...content);
 };
-export const i = italic;
 
 export class MarkdownStrikethroughBlock extends MarkdownInlineBlock {
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null || this.isEmpty) return null;
     return `~~${content}~~`;
   }
@@ -346,11 +487,10 @@ export const strikethrough = (
 ): MarkdownStrikethroughBlock => {
   return new MarkdownStrikethroughBlock(...content);
 };
-export const strike = strikethrough;
 
 export class MarkdownHighlightBlock extends MarkdownInlineBlock {
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null || this.isEmpty) return null;
     return `==${content}==`;
   }
@@ -361,11 +501,10 @@ export const highlight = (
 ): MarkdownHighlightBlock => {
   return new MarkdownHighlightBlock(...content);
 };
-export const hl = highlight;
 
 export class MarkdownSubscriptBlock extends MarkdownInlineBlock {
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null || this.isEmpty) return null;
     return `~${content}~`;
   }
@@ -376,11 +515,10 @@ export const subscript = (
 ): MarkdownSubscriptBlock => {
   return new MarkdownSubscriptBlock(...content);
 };
-export const sub = subscript;
 
 export class MarkdownSuperscriptBlock extends MarkdownInlineBlock {
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null || this.isEmpty) return null;
     return `^${content}^`;
   }
@@ -391,29 +529,28 @@ export const superscript = (
 ): MarkdownSuperscriptBlock => {
   return new MarkdownSuperscriptBlock(...content);
 };
-export const sup = superscript;
 
 export class MarkdownLinkBlock extends MarkdownInlineBlock {
-  private $url: string;
+  public $url: string;
 
   constructor(url: string, ...label: Array<MarkdownInlineBlockContent>) {
     super(...label);
     this.$url = url;
   }
 
-  $alt(
-    condition: boolean,
+  otherwise(
+    condition: BooleanCoercibleValue,
     url: string,
     ...label: Array<MarkdownInlineBlockContent>
   ): this {
-    if (!condition) return this;
+    if (!Boolean(condition)) return this;
     this.$url = url;
     this.$content = label;
     return this;
   }
 
-  render(): string {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string {
+    const content = super.render(options);
     if (content === null) return `<${this.$url}>`;
     return `[${content}](${this.$url})`;
   }
@@ -425,23 +562,51 @@ export const link = (
 ) => {
   return new MarkdownLinkBlock(url, ...label);
 };
-const url = link;
+
+export class MarkdownListBlock extends MarkdownMultilineBlock {
+  public $indent: number = 2;
+
+  indent(value: number): this {
+    this.$indent = value;
+    return this;
+  }
+
+  render(options?: OptionalRenderingOptions): string | null {
+    if (this.isEmpty) return null;
+    return this.$lines
+      .map((line) => {
+        if (line instanceof MarkdownListBlock) {
+          line.$indent = this.$indent;
+          const rendered = line.render(options);
+          if (rendered === null) return null;
+          return rendered
+            .split("\n")
+            .map((l) => this._SPACE_STRING.repeat(this.$indent) + l)
+            .join("\n");
+        }
+        if (this.isPrimitive(line)) return line;
+        return line.render(options);
+      })
+      .filter((line) => line !== null)
+      .join("\n");
+  }
+}
 
 export type MarkdownUnorderedListItemStyle = "*" | "-" | "+";
 
 export class MarkdownUnorderedListItemBlock extends MarkdownLineBlock {
   $style: MarkdownUnorderedListItemStyle | undefined;
-  private $defaultStyle: MarkdownUnorderedListItemStyle = "-";
+  private _defaultStyle: MarkdownUnorderedListItemStyle = "-";
 
   style(opt: MarkdownUnorderedListItemStyle): this {
     this.$style = opt;
     return this;
   }
 
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null) return null;
-    return `${this.$style ?? this.$defaultStyle} ${content}`;
+    return `${this.$style ?? this._defaultStyle} ${content}`;
   }
 }
 
@@ -450,11 +615,16 @@ export const unorderedListItem = (
 ): MarkdownUnorderedListItemBlock => {
   return new MarkdownUnorderedListItemBlock(...line);
 };
-export const u = unorderedListItem;
 
-export class MarkdownUnorderedListBlock extends MarkdownMultilineBlock {
-  constructor(...lines: Array<MarkdownLineBlockContent>) {
-    super(...lines.map((line) => new MarkdownUnorderedListItemBlock(line)));
+export class MarkdownUnorderedListBlock extends MarkdownListBlock {
+  constructor(...lines: Array<MarkdownLineBlockContent | MarkdownListBlock>) {
+    super(
+      ...lines.map((line) =>
+        line instanceof MarkdownListBlock
+          ? line
+          : new MarkdownUnorderedListItemBlock(line),
+      ),
+    );
   }
 
   style(opt: MarkdownUnorderedListItemStyle): this {
@@ -468,14 +638,13 @@ export class MarkdownUnorderedListBlock extends MarkdownMultilineBlock {
 }
 
 export const unorderedList = (
-  ...lines: Array<MarkdownLineBlockContent>
+  ...lines: Array<MarkdownLineBlockContent | MarkdownListBlock>
 ): MarkdownUnorderedListBlock => {
   return new MarkdownUnorderedListBlock(...lines);
 };
-export const ul = unorderedList;
 
 export class MarkdownOrderedListItemBlock extends MarkdownLineBlock {
-  $index: number;
+  public $index: number;
 
   constructor(index: number, ...line: Array<MarkdownLineBlockContent>) {
     super(...line);
@@ -487,8 +656,8 @@ export class MarkdownOrderedListItemBlock extends MarkdownLineBlock {
     return this;
   }
 
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null || this.isEmpty) return null;
     return `${this.$index}. ${content}`;
   }
@@ -500,39 +669,42 @@ const orderedListItem = (
 ): MarkdownOrderedListItemBlock => {
   return new MarkdownOrderedListItemBlock(index, ...line);
 };
-export const o = orderedListItem;
 
-export class MarkdownOrderedListBlock extends MarkdownMultilineBlock {
+export class MarkdownOrderedListBlock extends MarkdownListBlock {
   startingIndex(value: number): this {
-    this.$lines.forEach((line, index) => {
+    let itemIndex = 0;
+    this.$lines.forEach((line) => {
       if (line instanceof MarkdownOrderedListItemBlock) {
-        line.index(index + value);
+        line.index(itemIndex + value);
+        itemIndex++;
       }
     });
     return this;
   }
 
-  constructor(...lines: Array<MarkdownLineBlockContent>) {
+  constructor(...lines: Array<MarkdownLineBlockContent | MarkdownListBlock>) {
+    let itemIndex = 1;
     super(
-      ...lines.map(
-        (line, index) => new MarkdownOrderedListItemBlock(index + 1, line),
+      ...lines.map((line) =>
+        line instanceof MarkdownListBlock
+          ? line
+          : new MarkdownOrderedListItemBlock(itemIndex++, line),
       ),
     );
   }
 }
 
 export const orderedList = (
-  ...lines: Array<MarkdownLineBlockContent>
+  ...lines: Array<MarkdownLineBlockContent | MarkdownListBlock>
 ): MarkdownOrderedListBlock => {
   return new MarkdownOrderedListBlock(...lines);
 };
-export const ol = orderedList;
 
 type MarkdownTaskItemBlockStyle = "x" | "X";
 export class MarkdownTaskItemBlock extends MarkdownLineBlock {
-  private $checked: boolean = false;
-  private $style: MarkdownTaskItemBlockStyle | undefined;
-  private $defaultStyle: MarkdownTaskItemBlockStyle = "x";
+  public $checked: boolean = false;
+  public $style: MarkdownTaskItemBlockStyle | undefined;
+  private _defaultStyle: MarkdownTaskItemBlockStyle = "x";
 
   constructor(checked: boolean, ...line: Array<MarkdownLineBlockContent>) {
     super(...line);
@@ -549,10 +721,10 @@ export class MarkdownTaskItemBlock extends MarkdownLineBlock {
     return this;
   }
 
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null) return null;
-    return `- [${this.$checked ? (this.$style ?? this.$defaultStyle) : this._SPACE_STRING}] ${content}`;
+    return `- [${this.$checked ? (this.$style ?? this._defaultStyle) : this._SPACE_STRING}] ${content}`;
   }
 }
 
@@ -562,9 +734,22 @@ export const taskItem = (
 ): MarkdownTaskItemBlock => {
   return new MarkdownTaskItemBlock(checked, ...line);
 };
-export const t = taskItem;
 
-export class MarkdownTaskListBlock extends MarkdownMultilineBlock {
+export class MarkdownTaskListBlock extends MarkdownListBlock {
+  constructor(
+    ...lines: Array<
+      [boolean, ...MarkdownLineBlockContent[]] | MarkdownListBlock
+    >
+  ) {
+    super(
+      ...lines.map((line) => {
+        if (line instanceof MarkdownListBlock) return line;
+        const [checked, ...content] = line;
+        return new MarkdownTaskItemBlock(checked, ...content);
+      }),
+    );
+  }
+
   style(opt: MarkdownTaskItemBlockStyle): this {
     this.$lines.forEach((line) => {
       if (line instanceof MarkdownTaskItemBlock) {
@@ -573,33 +758,25 @@ export class MarkdownTaskListBlock extends MarkdownMultilineBlock {
     });
     return this;
   }
-
-  constructor(...lines: Array<[boolean, ...MarkdownLineBlockContent[]]>) {
-    super(
-      ...lines.map(
-        ([checked, ...line]) => new MarkdownTaskItemBlock(checked, ...line),
-      ),
-    );
-  }
 }
 
 export const tasks = (
-  ...lines: Array<[boolean, ...MarkdownLineBlockContent[]]>
+  ...lines: Array<[boolean, ...MarkdownLineBlockContent[]] | MarkdownListBlock>
 ): MarkdownTaskListBlock => {
   return new MarkdownTaskListBlock(...lines);
 };
 
 export type MarkdownCodeBlockLanguage = string;
 export class MarkdownCodeBlock extends MarkdownMultilineBlock {
-  private $language: MarkdownCodeBlockLanguage | undefined;
+  public $language: MarkdownCodeBlockLanguage | undefined;
 
   language(opt: MarkdownCodeBlockLanguage): this {
     this.$language = opt;
     return this;
   }
 
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null) return null;
     const containsNewlines = content.includes("\n");
     if (!this.$language && this.$lines.length === 1 && !containsNewlines) {
@@ -614,29 +791,28 @@ export const codeblock = (
 ): MarkdownCodeBlock => {
   return new MarkdownCodeBlock(...lines);
 };
-export const code = codeblock;
 
 export class MarkdownImageBlock extends MarkdownInlineBlock {
-  private $src: string;
+  public $src: string;
 
   constructor(src: string, ...alt: Array<MarkdownInlineBlockContent>) {
     super(...alt);
     this.$src = src;
   }
 
-  $alt(
-    condition: boolean,
+  otherwise(
+    condition: BooleanCoercibleValue,
     src: string,
     ...alt: Array<MarkdownInlineBlockContent>
   ): this {
-    if (!condition) return this;
+    if (!Boolean(condition)) return this;
     this.$src = src;
     this.$content = alt;
     return this;
   }
 
-  render(): string | null {
-    const content = super.render();
+  render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null) return null;
     return `![${content}](${this.$src})`;
   }
@@ -648,12 +824,11 @@ export const image = (
 ): MarkdownImageBlock => {
   return new MarkdownImageBlock(src, ...alt);
 };
-export const img = image;
 
 export type MarkdownHorizontalRuleStyle = "-" | "*" | "_";
 export class MarkdownHorizontalRuleBlock extends MarkdownLineBlock {
-  private $style: MarkdownHorizontalRuleStyle | undefined;
-  private $defaultStyle: MarkdownHorizontalRuleStyle = "-";
+  public $style: MarkdownHorizontalRuleStyle | undefined;
+  private _defaultStyle: MarkdownHorizontalRuleStyle = "-";
 
   constructor() {
     super();
@@ -673,25 +848,28 @@ export class MarkdownHorizontalRuleBlock extends MarkdownLineBlock {
   }
 
   render(): string | null {
-    return `\n${(this.$style ?? this.$defaultStyle).repeat(this.$count)}\n`;
+    return `\n${(this.$style ?? this._defaultStyle).repeat(this.$count)}\n`;
   }
 }
 
 export const horizontalRule = (): MarkdownHorizontalRuleBlock => {
   return new MarkdownHorizontalRuleBlock();
 };
-export const hr = horizontalRule;
 
 export class MarkdownBlockquoteBlock extends MarkdownMultilineBlock {
-  render(): string | null {
+  render(options?: OptionalRenderingOptions): string | null {
     if (this.isEmpty) return null;
     return this.$lines
+      .filter((line) => this.shouldFilter(line, options))
       .flatMap((line) => {
-        const content = line instanceof MarkdownBlock ? line.render() : line;
+        const content =
+          line instanceof MarkdownBlock ? line.render(options) : line;
         if (content === null) return [];
         const lineIsBlockquote = line instanceof MarkdownBlockquoteBlock;
         const prefix = `>${lineIsBlockquote ? this._EMPTY_STRING : this._SPACE_STRING}`;
-        return content.split("\n").map((l) => `${prefix}${l}`);
+        return String(content)
+          .split("\n")
+          .map((l) => `${prefix}${l}`);
       })
       .filter((line) => line !== null)
       .join("\n");
@@ -703,16 +881,14 @@ export const blockquote = (
 ): MarkdownBlockquoteBlock => {
   return new MarkdownBlockquoteBlock(...lines);
 };
-export const block = blockquote;
-export const bq = blockquote;
 
 export class MarkdownFootnoteBlock extends MarkdownInlineBlock {
   public $identifier: string | undefined;
-  public $multiline = new MarkdownMultilineBlock();
+  public $footer = new MarkdownMultilineBlock();
 
   constructor(...lines: Array<MarkdownMultilineBlockContent>) {
     super();
-    this.$multiline.$lines.push(...lines);
+    this.$footer.$lines.push(...lines);
   }
 
   private validateIdentifier(value: string): boolean {
@@ -726,14 +902,18 @@ export class MarkdownFootnoteBlock extends MarkdownInlineBlock {
     return this;
   }
 
+  id(value: string): this {
+    return this.identifier(value);
+  }
+
   render(): string | null {
-    if (!this.$identifier || this.$multiline.isEmpty) return null;
+    if (!this.$identifier || this.$footer.isEmpty) return null;
     return `[^${this.$identifier}]`;
   }
 
-  renderDefinition(): string | null {
-    const content = this.$multiline.render();
-    if (!this.$identifier || content === null || this.$multiline.isEmpty)
+  renderDefinition(options?: OptionalRenderingOptions): string | null {
+    const content = this.$footer.render(options);
+    if (!this.$identifier || content === null || this.$footer.isEmpty)
       return null;
     return `[^${this.$identifier}]: ${content}`;
   }
@@ -744,26 +924,19 @@ export const footnote = (
 ): MarkdownFootnoteBlock => {
   return new MarkdownFootnoteBlock(...lines);
 };
-export const foot = footnote;
-export const fn = footnote;
 
-export class MarkdownLineBreakBlock extends MarkdownLineBlock {
-  constructor() {
-    super();
-  }
-
+export class MarkdownLineBreakBlock extends MarkdownInlineBlock {
   render(): string | null {
-    return "";
+    return "\n";
   }
 }
 
 export const lineBreak = (): MarkdownLineBreakBlock => {
   return new MarkdownLineBreakBlock();
 };
-export const br = lineBreak;
 
 export class MarkdownEmojiBlock extends MarkdownInlineBlock {
-  private $emoji: EmojiShortname;
+  public $emoji: EmojiShortname;
 
   constructor(emoji: EmojiShortname) {
     super();
@@ -778,70 +951,77 @@ export class MarkdownEmojiBlock extends MarkdownInlineBlock {
 export const emoji = (emoji: EmojiShortname): MarkdownEmojiBlock => {
   return new MarkdownEmojiBlock(emoji);
 };
-export const e = emoji;
 
-export const m = {
+const list = {
+  unordered: unorderedList,
+  ul: unorderedList,
+  ordered: orderedList,
+  ol: orderedList,
+  tasks,
+};
+
+const listItem = {
+  unordered: unorderedListItem,
+  u: unorderedListItem,
+  ordered: orderedListItem,
+  o: orderedListItem,
+  task: taskItem,
+  t: taskItem,
+};
+export const b = {
+  md,
   document,
-  doc,
-  d,
+  doc: document,
+  d: document,
   section,
-  sec,
-  s,
+  sec: section,
+  s: section,
   heading,
-  head,
-  h,
+  head: heading,
+  h: heading,
   paragraph,
-  para,
-  p,
+  para: paragraph,
+  p: paragraph,
   blockquote,
-  block,
-  bq,
+  block: blockquote,
+  bq: blockquote,
   bold,
-  b,
+  b: bold,
   italic,
-  i,
+  i: italic,
   strikethrough,
-  strike,
+  strike: strikethrough,
   highlight,
-  hl,
+  hl: highlight,
   subscript,
-  sub,
+  sub: subscript,
   superscript,
-  sup,
+  sup: superscript,
   link,
-  url,
+  url: link,
   image,
-  img,
-  list: {
-    unordered: unorderedList,
-    ul,
-    ordered: orderedList,
-    ol,
-    tasks,
-  },
-  listItem: {
-    unordered: unorderedListItem,
-    u,
-    ordered: orderedListItem,
-    o,
-    task: taskItem,
-    t,
-  },
+  img: image,
   emoji,
-  e,
+  e: emoji,
+  list,
+  ls: list,
+  listItem,
+  li: listItem,
   codeblock,
-  code,
+  code: codeblock,
   horizontalRule,
-  hr,
+  hr: horizontalRule,
   footnote,
-  foot,
-  fn,
+  foot: footnote,
+  fn: footnote,
   lineBreak,
-  br,
+  br: lineBreak,
 };
 
 /**
  * 
+ * 
+ *Standard
 Headings X
 Paragraphs X
 Line Breaks X
@@ -853,6 +1033,7 @@ Horizontal Rules X
 Links X
 Images X
 
+Extended
 Tables
 Fenced Code Blocks X
 Footnotes X
