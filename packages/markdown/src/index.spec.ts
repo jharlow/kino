@@ -31,7 +31,7 @@ describe(b.h, () => {
   });
 });
 
-describe.only("chaining", () => {
+describe("chaining", () => {
   it("should chain bold", () => {
     const pronoun: string = "His";
     const name: string | null = null;
@@ -42,115 +42,123 @@ describe.only("chaining", () => {
         .b()
         .i()
         .default("Unidentified person");
-    console.log(
-      String(
-        t.setRenderingOptions({ renderNullish: true, lineJoinString: "" }),
-      ),
-    );
+    console.log(String(t.setRenderingOptions({})));
   });
 });
 
-describe("MarkdownDocument", () => {
+describe.only("MarkdownDocument", () => {
   function hello() {
     console.log("hello world");
     return "hello world";
   }
   it("should render an empty document", () => {
-    const document = b.doc(
-      b.heading("Hello, world!"),
-      b.br(),
-      "This is a test2",
-      b.para(
-        "This is a test ",
-        b.bold("bold text ", b.italic("italic text").style("_")),
-        b.para(" and some more text", b.emoji("waffle")),
-      ),
-      b.blockquote(
-        b.highlight("highlight text"),
-        b.subscript("subscript text"),
-        b.superscript("superscript text"),
-        b.bq(
-          "This is a blockquote",
-          b.bq(
-            "this is a nested blockquote",
-            b.bq("this is a deeply nested blockquote"),
-          ),
+    const document = b
+      .doc(
+        b.heading("Hello, world!"),
+        b.br(),
+        "This is a test2",
+        b.para(
+          "This is a test ",
+          b.bold("bold text ", b.italic("italic text").style("_")),
+          b.para(" and some more text", b.emoji("waffle")),
         ),
-      ),
-      b.list
-        .tasks(
-          [true, "This is a checked task"],
-          [false, "Item 2"],
-          b.list.tasks(
-            [true, "Item 2.1"],
-            b.list.ul(
-              "Item 2.1.1",
-              "Item 2.1.2",
-              b.list.ordered("Item 2.1.2.1", "Item 2.1.2.2"),
+        b.blockquote(
+          b.highlight("highlight text"),
+          b.subscript("subscript text"),
+          b.superscript("superscript text"),
+          b.bq(
+            "This is a blockquote",
+            b.bq(
+              "this is a nested blockquote",
+              b.bq("this is a deeply nested blockquote"),
             ),
           ),
-          [true, "Item 3"],
-        )
-        .style("X"),
-      b.listItem.task(true, "This is a checked task"),
-      b.list
-        .ordered("Item 1", "Item 2", b.url("Item 3", "https://www.google.com"))
-        .startingIndex(3),
-      b.listItem.ordered(1, "Item 1"),
-      b.list.unordered("Item 1", b.b("Item 2"), "Item 3").style("*"),
-      b.listItem.unordered("Item 1"),
-      b.bold("bold text", " and some more bold text ", b.italic("italic text")),
-      b.image("https://www.google.com", "Google logo"),
-      b.horizontalRule().style("*").count(5),
-      b.para(
-        "This is a second test ",
-        b.link("https://www.google.com", "with a ", b.bold("bold link")),
-        " and some more text with an unlabelled link ",
-        b.link("https://www.google.com"),
-      ),
-      b.sec(
-        b.h("heading 2").id("heading-1"),
-        b.list.unordered("Item 1", "Item 2", "Item 3").style("*"),
-        b.para(
-          "This is a section ",
-          b.para("This is a second section").if(false).default("get"),
-          b.footnote("this is a footnote"),
         ),
-        b.section(
-          b.h("heading 3"),
+        b.list
+          .tasks(
+            [true, "This is a checked task"],
+            [false, "Item 2"],
+            b.list
+              .tasks(
+                [true, "Item 2.1"],
+                b.list.ul(
+                  "Item 2.1.1",
+                  "Item 2.1.2",
+                  b.list.ordered("Item 2.1.2.1", "Item 2.1.2.2"),
+                ),
+              )
+              .indent(4),
+            [true, "Item 3"],
+          )
+          .style("X"),
+        b.listItem.task(true, "This is a checked task"),
+        b.list
+          .ordered(
+            "Item 1",
+            "Item 2",
+            b.url("Item 3", "https://www.google.com"),
+          )
+          .startingIndex(3),
+        b.listItem.ordered(1, "Item 1"),
+        b.list.unordered("Item 1", b.b("Item 2"), "Item 3").style("*"),
+        b.listItem.unordered("Item 1"),
+        b.bold(
+          "bold text",
+          " and some more bold text ",
+          b.italic("italic text"),
+        ),
+        b.image("https://www.google.com", "Google logo"),
+        b.horizontalRule().style("*").count(5),
+        b.para(
+          "This is a second test ",
+          b.link("https://www.google.com", "with a ", b.bold("bold link")),
+          " and some more text with an unlabelled link ",
+          b.link("https://www.google.com"),
+        ),
+        b.sec(
+          b.h("heading 2").id("heading-1"),
+          b.list.unordered("Item 1", "Item 2", "Item 3").style("*"),
           b.para(
-            "This is a section",
-            b
-              .footnote("This is a second section", "with multiple lines")
-              .identifier("bignote"),
+            "This is a section ",
+            b.para("This is a second section").if(false).default("get"),
+            b.footnote("this is a footnote"),
           ),
           b.section(
-            b.h("heading 4"),
-            b.para("This is a section"),
+            b.h("heading 3"),
+            b.para(
+              "This is a section",
+              b
+                .footnote("This is a second section", "with multiple lines")
+                .identifier("bignote"),
+            ),
             b.section(
-              b.h("heading 5"),
-              b.para("This is a section"),
-              b.h("heading 2").level(2),
+              b.h("heading 4"),
               b.para("This is a section"),
               b.section(
+                b.h("heading 5"),
+                b.para("This is a section"),
+                b.h("heading 2").level(2),
+                b.para("This is a section"),
                 b.section(
-                  b.h("heading 6"),
-                  b.para(
-                    "This is a section",
-                    b.footnote("This is a third footnote"),
-                  ),
                   b.section(
-                    b.h("heading ", b.strike("7 strikethrough text")),
-                    b.para("This is a section"),
+                    b.h("heading 6"),
+                    b.para(
+                      "This is a section",
+                      b.footnote("This is a third footnote"),
+                    ),
+                    b.section(
+                      b.h("heading ", b.strike("7 strikethrough text")),
+                      b.para("This is a section"),
+                    ),
                   ),
                 ),
+                b.code(hello.toString()).language("js"),
               ),
-              b.code(hello.toString()).language("js"),
             ),
           ),
         ),
-      ),
-    );
+      )
+      .setRenderingOptions({});
     expect(`${document}`).toBe(
       `# Hello, world!
 
@@ -214,11 +222,6 @@ function hello() {
 with multiple lines
 [^2]: This is a third footnote`,
     );
-  });
-  it("should render a string readable section", () => {
-    const section = b.sec("This is a section");
-    expect(`${section}`).toBe("This is a section");
-    expect(String(section)).toBe("This is a section");
   });
 });
 

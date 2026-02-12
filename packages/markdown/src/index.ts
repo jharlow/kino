@@ -7,9 +7,23 @@ export interface StringReadable {
 
 export type PrimitiveValues = string | number | boolean | null | undefined;
 
+export interface EnforceStylesOptions {
+  bold?: MarkdownBoldStyle;
+  italic?: MarkdownItalicStyle;
+  unorderedListItem?: MarkdownUnorderedListItemStyle;
+  horizontalRule?: MarkdownHorizontalRuleStyle;
+  taskItem?: MarkdownTaskItemBlockStyle;
+}
+
+export interface EnforceIndentOptions {
+  list?: number;
+}
+
 export interface RenderingOptions {
   renderNullish: boolean;
   lineJoinString: string;
+  enforceStyles: EnforceStylesOptions;
+  enforceIndent: EnforceIndentOptions;
 }
 
 export type OptionalRenderingOptions = Partial<RenderingOptions>;
@@ -21,6 +35,12 @@ export type BooleanCoercibleValue =
   | string
   | number;
 
+export type MarkdownBoldStyle = "**" | "__";
+export type MarkdownItalicStyle = "*" | "_";
+export type MarkdownUnorderedListItemStyle = "*" | "-" | "+";
+export type MarkdownHorizontalRuleStyle = "-" | "*" | "_";
+export type MarkdownTaskItemBlockStyle = "x" | "X";
+
 export abstract class MarkdownBlock implements StringReadable {
   protected readonly _EMPTY_STRING = "";
   protected readonly _SPACE_STRING = " ";
@@ -29,6 +49,8 @@ export abstract class MarkdownBlock implements StringReadable {
   protected readonly _defaultRenderingOptions: RenderingOptions = {
     renderNullish: false,
     lineJoinString: this._EMPTY_STRING,
+    enforceStyles: {},
+    enforceIndent: {},
   };
 
   public setRenderingOptions(options: OptionalRenderingOptions): this {
@@ -347,15 +369,15 @@ export class MarkdownSectionBlock extends MarkdownMultilineBlock {
       }
     }
 
-    const body = this.render(this.getRenderingOptions()) ?? "";
+    const options = this.getRenderingOptions();
+    const body = this.render(options) ?? "";
 
     if (footnotes.length === 0) return body;
 
     const definitions = footnotes
-      .map((fn) => fn.renderDefinition())
+      .map((fn) => fn.renderDefinition(options))
       .filter((d) => d !== null)
       .join("\n");
-
     return definitions ? `${body}\n\n${definitions}` : body;
   }
 }
@@ -428,7 +450,6 @@ export const heading = (
   return new MarkdownHeadingBlock(...line);
 };
 
-export type MarkdownBoldStyle = "**" | "__";
 export class MarkdownBoldBlock extends MarkdownInlineBlock {
   public $style: MarkdownBoldStyle | undefined;
   private _defaultStyle: MarkdownBoldStyle = "**";
@@ -441,7 +462,9 @@ export class MarkdownBoldBlock extends MarkdownInlineBlock {
   render(options?: OptionalRenderingOptions): string | null {
     const content = super.render(options);
     if (content === null || this.isEmpty) return null;
-    return `${this.$style ?? this._defaultStyle}${content}${this.$style ?? this._defaultStyle}`;
+    const style =
+      options?.enforceStyles?.bold ?? this.$style ?? this._defaultStyle;
+    return `${style}${content}${style}`;
   }
 }
 
@@ -451,7 +474,6 @@ export const bold = (
   return new MarkdownBoldBlock(...content);
 };
 
-export type MarkdownItalicStyle = "*" | "_";
 export class MarkdownItalicBlock extends MarkdownInlineBlock {
   public $style: MarkdownItalicStyle | undefined;
   private _defaultStyle: MarkdownItalicStyle = "*";
@@ -464,7 +486,9 @@ export class MarkdownItalicBlock extends MarkdownInlineBlock {
   render(options?: OptionalRenderingOptions): string | null {
     const content = super.render(options);
     if (content === null || this.isEmpty) return null;
-    return `${this.$style ?? this._defaultStyle}${content}${this.$style ?? this._defaultStyle}`;
+    const style =
+      options?.enforceStyles?.italic ?? this.$style ?? this._defaultStyle;
+    return `${style}${content}${style}`;
   }
 }
 
@@ -538,12 +562,8 @@ export class MarkdownLinkBlock extends MarkdownInlineBlock {
     this.$url = url;
   }
 
-  otherwise(
-    condition: BooleanCoercibleValue,
-    url: string,
-    ...label: Array<MarkdownInlineBlockContent>
-  ): this {
-    if (!Boolean(condition)) return this;
+  default(url: string, ...label: Array<MarkdownInlineBlockContent>): this {
+    if (!this.isEmpty) return this;
     this.$url = url;
     this.$content = label;
     return this;
@@ -564,24 +584,30 @@ export const link = (
 };
 
 export class MarkdownListBlock extends MarkdownMultilineBlock {
-  public $indent: number = 2;
+  public $indent: number | undefined;
+  private _defaultIndent: number = 2;
 
   indent(value: number): this {
+    if (this.$indent) return this;
     this.$indent = value;
     return this;
   }
 
   render(options?: OptionalRenderingOptions): string | null {
     if (this.isEmpty) return null;
+    const indent =
+      options?.enforceIndent?.list ?? this.$indent ?? this._defaultIndent;
     return this.$lines
       .map((line) => {
         if (line instanceof MarkdownListBlock) {
-          line.$indent = this.$indent;
+          if (!line.$indent) {
+            line.indent(indent);
+          }
           const rendered = line.render(options);
           if (rendered === null) return null;
           return rendered
             .split("\n")
-            .map((l) => this._SPACE_STRING.repeat(this.$indent) + l)
+            .map((l) => this._SPACE_STRING.repeat(indent) + l)
             .join("\n");
         }
         if (this.isPrimitive(line)) return line;
@@ -591,8 +617,6 @@ export class MarkdownListBlock extends MarkdownMultilineBlock {
       .join("\n");
   }
 }
-
-export type MarkdownUnorderedListItemStyle = "*" | "-" | "+";
 
 export class MarkdownUnorderedListItemBlock extends MarkdownLineBlock {
   $style: MarkdownUnorderedListItemStyle | undefined;
@@ -606,7 +630,11 @@ export class MarkdownUnorderedListItemBlock extends MarkdownLineBlock {
   render(options?: OptionalRenderingOptions): string | null {
     const content = super.render(options);
     if (content === null) return null;
-    return `${this.$style ?? this._defaultStyle} ${content}`;
+    const style =
+      options?.enforceStyles?.unorderedListItem ??
+      this.$style ??
+      this._defaultStyle;
+    return `${style} ${content}`;
   }
 }
 
@@ -700,7 +728,6 @@ export const orderedList = (
   return new MarkdownOrderedListBlock(...lines);
 };
 
-type MarkdownTaskItemBlockStyle = "x" | "X";
 export class MarkdownTaskItemBlock extends MarkdownLineBlock {
   public $checked: boolean = false;
   public $style: MarkdownTaskItemBlockStyle | undefined;
@@ -724,7 +751,9 @@ export class MarkdownTaskItemBlock extends MarkdownLineBlock {
   render(options?: OptionalRenderingOptions): string | null {
     const content = super.render(options);
     if (content === null) return null;
-    return `- [${this.$checked ? (this.$style ?? this._defaultStyle) : this._SPACE_STRING}] ${content}`;
+    const style =
+      options?.enforceStyles?.taskItem ?? this.$style ?? this._defaultStyle;
+    return `- [${this.$checked ? style : this._SPACE_STRING}] ${content}`;
   }
 }
 
@@ -800,12 +829,8 @@ export class MarkdownImageBlock extends MarkdownInlineBlock {
     this.$src = src;
   }
 
-  otherwise(
-    condition: BooleanCoercibleValue,
-    src: string,
-    ...alt: Array<MarkdownInlineBlockContent>
-  ): this {
-    if (!Boolean(condition)) return this;
+  default(src: string, ...alt: Array<MarkdownInlineBlockContent>): this {
+    if (!this.isEmpty) return this;
     this.$src = src;
     this.$content = alt;
     return this;
@@ -825,7 +850,6 @@ export const image = (
   return new MarkdownImageBlock(src, ...alt);
 };
 
-export type MarkdownHorizontalRuleStyle = "-" | "*" | "_";
 export class MarkdownHorizontalRuleBlock extends MarkdownLineBlock {
   public $style: MarkdownHorizontalRuleStyle | undefined;
   private _defaultStyle: MarkdownHorizontalRuleStyle = "-";
@@ -847,8 +871,12 @@ export class MarkdownHorizontalRuleBlock extends MarkdownLineBlock {
     return this;
   }
 
-  render(): string | null {
-    return `\n${(this.$style ?? this._defaultStyle).repeat(this.$count)}\n`;
+  render(options?: OptionalRenderingOptions): string | null {
+    const style =
+      options?.enforceStyles?.horizontalRule ??
+      this.$style ??
+      this._defaultStyle;
+    return `\n${style.repeat(this.$count)}\n`;
   }
 }
 
@@ -927,7 +955,7 @@ export const footnote = (
 
 export class MarkdownLineBreakBlock extends MarkdownInlineBlock {
   render(): string | null {
-    return "\n";
+    return "";
   }
 }
 
