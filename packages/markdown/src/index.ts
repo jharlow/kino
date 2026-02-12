@@ -19,12 +19,43 @@ export interface EnforceIndentOptions {
   list?: number;
 }
 
+export type NewlineStrategy =
+  | "before_and_after_heading"
+  | "between_blocks"
+  | "none";
+
 export interface RenderingOptions {
   renderNullish: boolean;
   lineJoinString: string;
   enforceStyles: EnforceStylesOptions;
   enforceIndent: EnforceIndentOptions;
+  newlineStrategy: NewlineStrategy;
 }
+
+const defaultRenderingOptions: RenderingOptions = {
+  renderNullish: false,
+  lineJoinString: "",
+  enforceStyles: {},
+  enforceIndent: {},
+  newlineStrategy: "none",
+};
+
+export const renderingOptions = (
+  options: OptionalRenderingOptions,
+): RenderingOptions => {
+  return {
+    ...defaultRenderingOptions,
+    enforceStyles: {
+      ...defaultRenderingOptions.enforceStyles,
+      ...options.enforceStyles,
+    },
+    enforceIndent: {
+      ...defaultRenderingOptions.enforceIndent,
+      ...options.enforceIndent,
+    },
+    ...options,
+  };
+};
 
 export type OptionalRenderingOptions = Partial<RenderingOptions>;
 
@@ -51,6 +82,7 @@ export abstract class MarkdownBlock implements StringReadable {
     lineJoinString: this._EMPTY_STRING,
     enforceStyles: {},
     enforceIndent: {},
+    newlineStrategy: "none",
   };
 
   public setRenderingOptions(options: OptionalRenderingOptions): this {
@@ -313,10 +345,11 @@ export class MarkdownMultilineBlock<
 
   render(options?: OptionalRenderingOptions): string | null {
     if (this.isEmpty) return null;
-    return this.$lines
+    const { newlineStrategy } = this.getRenderingOptions(options);
+    const entries = this.$lines
       .filter((line) => this.shouldFilter(line, options))
       .map((line) => {
-        if (this.isPrimitive(line)) return line;
+        if (this.isPrimitive(line)) return { rendered: line, source: line };
         if (line instanceof MarkdownSectionBlock) {
           line.depth = this.$depth + 1;
         }
@@ -327,9 +360,36 @@ export class MarkdownMultilineBlock<
           ) as MarkdownHeadingLevel;
           line.level(safeLevel);
         }
-        return line.render(options);
+        return { rendered: line.render(options), source: line };
+      });
+
+    if (newlineStrategy === "none") {
+      return entries.map((e) => e.rendered).join("\n");
+    }
+
+    const startsWithHeading = (s: unknown): boolean =>
+      s instanceof MarkdownHeadingBlock ||
+      (s instanceof MarkdownMultilineBlock &&
+        s.$lines.length > 0 &&
+        s.$lines[0] instanceof MarkdownHeadingBlock);
+
+    return entries
+      .map((entry, i) => {
+        if (i === 0) return String(entry.rendered);
+        const prev = entries[i - 1];
+        let sep = "\n";
+        if (
+          newlineStrategy === "before_and_after_heading" &&
+          (prev.source instanceof MarkdownHeadingBlock ||
+            startsWithHeading(entry.source))
+        ) {
+          sep = "\n\n";
+        } else if (newlineStrategy === "between_blocks") {
+          sep = "\n\n";
+        }
+        return sep + String(entry.rendered);
       })
-      .join("\n");
+      .join("");
   }
 
   [Symbol.toPrimitive](hint: "default" | "string" | "number"): string {
@@ -1044,6 +1104,7 @@ export const b = {
   fn: footnote,
   lineBreak,
   br: lineBreak,
+  renderingOptions,
 };
 
 /**
