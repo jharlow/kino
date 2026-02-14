@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import b, { MarkdownHeadingLevel } from ".";
+import { b, MarkdownHeadingLevel, parse, inspect } from ".";
 
 describe(b.h, () => {
   it("should render a heading", () => {
@@ -28,23 +28,6 @@ describe(b.h, () => {
     expect(`${b.h("heading").id("heading-1").level(2)}`).toBe(
       "## heading {#heading-1}",
     );
-  });
-});
-
-describe.only("chaining", () => {
-  it("should chain bold", () => {
-    const pronoun: string = "His";
-    const name: string | null = "John";
-    const gender = pronoun === "His" ? "man" : "woman";
-    const t =
-      b.md`${b.b(pronoun)} name was ${b.p(name)} and he was a good ${gender}.
-      ${b.list.ol("item 1", "item 2", "item 3")} 
-      He liked pie.`
-        .trim()
-        .emptyIf(true)
-        .defaultIfEmpty("Unidentified person");
-    const doc = b.doc("test", b.br(), "test2");
-    console.log(`${doc}`);
   });
 });
 
@@ -148,7 +131,7 @@ describe("MarkdownDocument", () => {
         ),
       ),
     );
-    console.log(`${document}`);
+    // console.log(`${document}`);
     //     expect(`${document}`).toBe(
     //       `# Hello, world!
 
@@ -311,5 +294,250 @@ describe("MarkdownFootnoteBlock", () => {
   it("should render no definitions section when no footnotes exist", () => {
     const document = b.doc(b.para("No footnotes here"));
     expect(`${document}`).toBe("No footnotes here");
+  });
+});
+
+describe("parse", () => {
+  it("should round-trip plain text", () => {
+    const input = "just plain text\nmore text";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip headings with sections", () => {
+    const input = "# A\n## B\n### C\ntext\n## D\n# E";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should shift heading levels when embedded", () => {
+    const inner = parse("# A\n## B\ntext");
+    const outer = b.doc(b.sec(b.h("Top"), inner, b.sec(inner)), inner);
+    expect(String(outer)).toBe(
+      "## Top\n### A\n#### B\ntext\n#### A\n##### B\ntext\n## A\n### B\ntext",
+    );
+  });
+
+  it("should round-trip inline formatting", () => {
+    const input = "**bold** and *italic* and ~~strike~~";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip nested inline formatting", () => {
+    const input = "**bold *italic* bold**";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip links and images", () => {
+    const input = "[text](url) and ![alt](src) and <https://example.com>";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip unordered lists", () => {
+    const input = "- Item 1\n- Item 2\n  - Nested\n- Item 3";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip ordered lists", () => {
+    const input = "1. First\n2. Second\n3. Third";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip task lists", () => {
+    const input = "- [x] Done\n- [ ] Not done\n- [X] Also done";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip code blocks", () => {
+    const input = "```js\nconst x = 1;\n```";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip inline code", () => {
+    const input = "use `code` here";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip blockquotes", () => {
+    const input = "> line 1\n> line 2\n>> nested";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip horizontal rules", () => {
+    const input = "before\n\n---\n\nafter";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip horizontal rules with any length", () => {
+    const input = "before\n\n----------------\n\nafter";
+    const doc = parse(input);
+    expect(inspect(doc)).toContain("MarkdownHorizontalRuleBlock");
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip horizontal rules with any style", () => {
+    const input = "before\n\n********\n\nafter";
+    const doc = parse(input);
+    expect(inspect(doc)).toContain("MarkdownHorizontalRuleBlock");
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip footnotes", () => {
+    const input = "Some text[^1]\n\n[^1]: footnote content";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip multiple footnotes", () => {
+    const input = `Some text[^1]\n\n[^1]: footnote content\n\nSome more text[^2]\n\n[^2]: footnote content\n\nFinal footnote[^3]\n\n[^3]: final footnote content`;
+    const doc = parse(input);
+    expect(String(doc)).toBe(
+      `Some text[^1]\n\nSome more text[^2]\n\nFinal footnote[^3]\n\n[^1]: footnote content\n[^2]: footnote content\n[^3]: final footnote content`,
+    );
+  });
+
+  it("should embed nested footnotes naturally in their host documents", () => {
+    const input = `Some text[^1]\n\n[^1]: footnote content\n\nSome more text[^bignote]\n\n[^bignote]: footnote content\n\nFinal footnote[^3]\n\n[^3]: final footnote content`;
+    const doc = parse(input);
+    const hostDoc = b.doc(
+      b.para("Host text", b.footnote("host footnote content")),
+      b.br(),
+      b.sec(b.h("Heading"), b.sec(b.h("Nested heading"), doc)),
+      b.br(),
+      b.para("Host text 2", b.footnote("host footnote content 2")),
+    );
+    expect(String(hostDoc)).toBe(
+      `Host text[^1]\n\n## Heading\n### Nested heading\nSome text[^2]\n\nSome more text[^bignote]\n\nFinal footnote[^3]\n\nHost text 2[^4]\n\n[^1]: host footnote content\n[^2]: footnote content\n[^bignote]: footnote content\n[^3]: final footnote content\n[^4]: host footnote content 2`,
+    );
+  });
+
+  it("should not add footnotes if there is only one side", () => {
+    const input = "Some text[^1]\n\n[^2]: footnote content";
+    const doc = parse(input);
+    expect(String(doc)).toBe("Some text");
+  });
+
+  it("should round-trip highlight, subscript, superscript", () => {
+    const input = "==highlighted== and ~sub~ and ^sup^";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should round-trip emoji", () => {
+    const input = "hello :waffle: world";
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should be able to handle complex nested styling", () => {
+    const input = b
+      .doc(
+        b.block(
+          b.para(
+            "Some text",
+            b.footnote("footnote content"),
+            b.p("text").b().i().st().hl().url("https://example.com"),
+          ),
+          b.list.ul(
+            "Item 1",
+            "Item 2",
+            b.list.ol("Item 3", "Item 4").startingIndex(3),
+          ),
+        ),
+      )
+      .toString();
+    const doc = parse(input);
+    expect(String(doc)).toBe(input);
+  });
+
+  it("should apply enforceStyles to parsed bold", () => {
+    const doc = parse("**hello**");
+    doc.setRenderingOptions({ enforceStyles: { bold: "__" } });
+    expect(String(doc)).toBe("__hello__");
+  });
+
+  it("should apply enforceStyles to parsed italic", () => {
+    const doc = parse("*hello*");
+    doc.setRenderingOptions({ enforceStyles: { italic: "_" } });
+    expect(String(doc)).toBe("_hello_");
+  });
+
+  it("should preserve indentation of nested lists when trimming", () => {
+    const lists = b.list
+      .ul(
+        "Item 1",
+        "Item 2",
+        b.list.ul("Nested item", b.list.ul("Deeply nested")),
+        "Item 3",
+      )
+      .trim();
+    expect(String(lists)).toBe(
+      "- Item 1\n- Item 2\n  - Nested item\n    - Deeply nested\n- Item 3",
+    );
+  });
+
+  it("should preserve relative indentation when trimming code blocks", () => {
+    const code = b
+      .code(
+        `
+        function hello() {
+          console.log("world");
+        }
+      `,
+      )
+      .language("js")
+      .trim();
+    expect(String(code)).toBe(
+      `\`\`\`js\nfunction hello() {\n  console.log("world");\n}\n\`\`\``,
+    );
+  });
+});
+
+describe("inspect", () => {
+  it("should display block tree for a built document", () => {
+    const doc = b.doc(
+      b.heading("Hello"),
+      b.para("text ", b.bold("bold ", b.italic("nested"))),
+      b.list.ul("Item 1", "Item 2"),
+    );
+    const tree = inspect(doc);
+    expect(tree).toContain("MarkdownDocument");
+    expect(tree).toContain("MarkdownHeadingBlock");
+    expect(tree).toContain("MarkdownBoldBlock");
+    expect(tree).toContain("MarkdownItalicBlock");
+    expect(tree).toContain("MarkdownUnorderedListBlock");
+    expect(tree).toContain('"Hello"');
+  });
+
+  it("should display block tree for a parsed document", () => {
+    const doc = parse("# Title\n**bold** and *italic*\n- item 1\n- item 2");
+    const tree = inspect(doc);
+    expect(tree).toContain("MarkdownDocument");
+    expect(tree).toContain("MarkdownHeadingBlock");
+    expect(tree).toContain("MarkdownBoldBlock");
+    expect(tree).toContain("MarkdownItalicBlock");
+    expect(tree).toContain("MarkdownListBlock");
+  });
+
+  it("should show metadata for blocks", () => {
+    const doc = b.doc(
+      b.code("x = 1").language("py"),
+      b.link("https://example.com", "click"),
+      b.image("pic.png", "alt"),
+    );
+    const tree = inspect(doc);
+    expect(tree).toContain("lang=py");
+    expect(tree).toContain("url=https://example.com");
+    expect(tree).toContain("src=pic.png");
   });
 });
