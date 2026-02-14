@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { b, MarkdownHeadingLevel } from ".";
+import b, { MarkdownHeadingLevel } from ".";
 
 describe(b.h, () => {
   it("should render a heading", () => {
@@ -31,22 +31,24 @@ describe(b.h, () => {
   });
 });
 
-describe("chaining", () => {
+describe.only("chaining", () => {
   it("should chain bold", () => {
     const pronoun: string = "His";
-    const name: string | null = null;
+    const name: string | null = "John";
     const gender = pronoun === "His" ? "man" : "woman";
     const t =
-      b.md`${pronoun} name was ${name} and he was a good ${gender}. He liked pie.`
-        .if(true)
-        .b()
-        .i()
-        .default("Unidentified person");
-    console.log(String(t.setRenderingOptions({})));
+      b.md`${b.b(pronoun)} name was ${b.p(name)} and he was a good ${gender}.
+      ${b.list.ol("item 1", "item 2", "item 3")} 
+      He liked pie.`
+        .trim()
+        .emptyIf(true)
+        .defaultIfEmpty("Unidentified person");
+    const doc = b.doc("test", b.br(), "test2");
+    console.log(`${doc}`);
   });
 });
 
-describe.only("MarkdownDocument", () => {
+describe("MarkdownDocument", () => {
   function hello() {
     console.log("hello world");
     return "hello world";
@@ -110,7 +112,7 @@ describe.only("MarkdownDocument", () => {
         b.list.unordered("Item 1", "Item 2", "Item 3").style("*"),
         b.para(
           "This is a section ",
-          b.para("This is a second section").if(false).default("get"),
+          b.para("This is a second section").emptyIf(false).default("get"),
           b.footnote("this is a footnote"),
         ),
         b.section(
