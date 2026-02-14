@@ -1115,6 +1115,62 @@ export const blockquote = (
 export const block = blockquote;
 export const bq = blockquote;
 
+export type MarkdownTableColumnName = string;
+export type MarkdownTableColumn<TColumnName extends MarkdownTableColumnName> = {
+  name: TColumnName;
+  maxWidth: number;
+};
+export type MarkdownTableRow<TColumnNames extends MarkdownTableColumnName[]> = {
+  [K in TColumnNames[number]]: MarkdownMultilineBlockContent;
+};
+export class MarkdownTableBlock<
+  TColumnNames extends MarkdownTableColumnName[],
+> extends MarkdownMultilineBlock<{
+  excludeMultiline: false;
+}> {
+  public $columns: Array<MarkdownTableColumn<TColumnNames[number]>>;
+  private readonly _defaultColumnMaxWidth: number = 200;
+  public $rows: Array<{
+    [K in TColumnNames[number]]: MarkdownMultilineBlockContent;
+  }>;
+  constructor(
+    columnNames: TColumnNames,
+    ...rows: Array<MarkdownTableRow<TColumnNames>>
+  ) {
+    super();
+    this.$columns = columnNames.map((name) => ({
+      name,
+      maxWidth: this._defaultColumnMaxWidth,
+    }));
+    this.$rows = rows;
+  }
+
+  addRow(...rows: Array<MarkdownTableRow<TColumnNames>>): this {
+    this.$rows.push(...rows);
+    return this;
+  }
+
+  addRows(...rows: Array<MarkdownTableRow<TColumnNames>>): this {
+    return this.addRow(...rows);
+  }
+
+  setColumnMaxWidth(column: TColumnNames[number], width: number): this {
+    const columnIndex = this.$columns.findIndex((c) => c.name === column);
+    if (columnIndex === -1) return this;
+    this.$columns[columnIndex].maxWidth = width;
+    return this;
+  }
+}
+
+export const table = <TColumnNames extends MarkdownTableColumnName[]>(
+  columnNames: TColumnNames,
+  ...rows: Array<MarkdownTableRow<TColumnNames>>
+): MarkdownTableBlock<TColumnNames> => {
+  return new MarkdownTableBlock(columnNames, ...rows);
+};
+export const tb = table;
+export const t = table;
+
 export class MarkdownFootnoteBlock extends MarkdownInlineBlock {
   public $identifier: string | undefined;
   public $footer = new MarkdownMultilineBlock();
@@ -1946,6 +2002,9 @@ export const b = {
   fn,
   lineBreak,
   br,
+  table,
+  tb,
+  t,
   renderingOptions,
   parse,
   inspect,
