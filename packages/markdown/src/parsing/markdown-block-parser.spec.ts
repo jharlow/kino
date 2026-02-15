@@ -119,15 +119,15 @@ describe("parse", () => {
         expect(String(doc)).toBe("__bold text__");
       });
 
-      it("should apply enforceStyles to parsed bold", () => {
+      it("should apply enforce to parsed bold", () => {
         const doc = b.parse("**hello**");
-        doc.setRenderingOptions({ enforceStyles: { bold: "__" } });
+        doc.setRenderingOptions({ enforce: { bold: { style: "__" } } });
         expect(String(doc)).toBe("__hello__");
       });
 
-      it("should apply enforceStyles to parsed underscore bold", () => {
+      it("should apply enforce to parsed underscore bold", () => {
         const doc = b.parse("__hello__");
-        doc.setRenderingOptions({ enforceStyles: { bold: "**" } });
+        doc.setRenderingOptions({ enforce: { bold: { style: "**" } } });
         expect(String(doc)).toBe("**hello**");
       });
     });
@@ -143,9 +143,9 @@ describe("parse", () => {
         expect(String(doc)).toBe("_italic text_");
       });
 
-      it("should apply enforceStyles to parsed italic", () => {
+      it("should apply enforce to parsed italic", () => {
         const doc = b.parse("*hello*");
-        doc.setRenderingOptions({ enforceStyles: { italic: "_" } });
+        doc.setRenderingOptions({ enforce: { italic: { style: "_" } } });
         expect(String(doc)).toBe("_hello_");
       });
     });

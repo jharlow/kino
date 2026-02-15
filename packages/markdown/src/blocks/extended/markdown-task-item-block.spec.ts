@@ -62,21 +62,21 @@ describe("MarkdownTaskItemBlock", () => {
     expect(b.listItem.task(false).render()).toBeNull();
   });
 
-  it("should respect enforceStyles.taskItem rendering option", () => {
+  it("should respect enforce.taskItem rendering option", () => {
     const block = b.listItem.task(true, "item");
-    expect(block.render({ enforceStyles: { taskItem: "X" } })).toBe(
+    expect(block.render({ enforce: { taskItem: { style: "X" } } })).toBe(
       "- [X] item",
     );
   });
 
-  it("should let enforceStyles override explicit style", () => {
+  it("should let enforce override explicit style", () => {
     const block = b.listItem.task(true, "item").style("x");
-    expect(block.render({ enforceStyles: { taskItem: "X" } })).toBe(
+    expect(block.render({ enforce: { taskItem: { style: "X" } } })).toBe(
       "- [X] item",
     );
   });
 
-  it("should use explicit style when no enforceStyles is set", () => {
+  it("should use explicit style when no enforce is set", () => {
     const block = b.listItem.task(true, "item").style("X");
     expect(block.render()).toBe("- [X] item");
   });

@@ -196,13 +196,13 @@ describe("MarkdownTableBlock", () => {
     });
   });
 
-  describe("enforceStyles.tableAlign", () => {
+  describe("enforce.table", () => {
     it("should override all column alignments", () => {
       const table = b.table(
         { a: { name: "A", align: "left" }, b: "B" },
         { a: "1", b: "2" },
       );
-      const result = table.render({ enforceStyles: { tableAlign: "center" } });
+      const result = table.render({ enforce: { table: { align: "center" } } });
       const lines = result!.split("\n");
       const separator = lines[1];
       const parts = separator.split("|").filter((s) => s.trim() !== "");
@@ -215,7 +215,7 @@ describe("MarkdownTableBlock", () => {
       const table = b
         .table({ col: "Col" }, { col: "data" })
         .style("left");
-      const result = table.render({ enforceStyles: { tableAlign: "right" } });
+      const result = table.render({ enforce: { table: { align: "right" } } });
       expect(result).toContain("---:");
       expect(result).not.toContain(":---");
     });

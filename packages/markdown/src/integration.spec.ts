@@ -363,22 +363,22 @@ describe("integration: block composition in documents and sections", () => {
       expect(String(doc)).toBe("intro\n\n# Title\n\nbody");
     });
 
-    it("should propagate enforceStyles to bold within a document", () => {
+    it("should propagate enforce to bold within a document", () => {
       const doc = b.doc(b.p("text ", b.b("bold")));
-      doc.setRenderingOptions({ enforceStyles: { bold: "__" } });
+      doc.setRenderingOptions({ enforce: { bold: { style: "__" } } });
       expect(String(doc)).toBe("text __bold__");
     });
 
-    it("should propagate enforceStyles to italic within a document", () => {
+    it("should propagate enforce to italic within a document", () => {
       const doc = b.doc(b.p("text ", b.i("italic")));
-      doc.setRenderingOptions({ enforceStyles: { italic: "_" } });
+      doc.setRenderingOptions({ enforce: { italic: { style: "_" } } });
       expect(String(doc)).toBe("text _italic_");
     });
 
-    it("should propagate enforceStyles.unorderedListItem", () => {
+    it("should propagate enforce.unorderedListItem", () => {
       const doc = b.doc(b.list.ul("Item 1", "Item 2"));
       doc.setRenderingOptions({
-        enforceStyles: { unorderedListItem: "*" },
+        enforce: { unorderedListItem: { style: "*" } },
       });
       expect(String(doc)).toBe("* Item 1\n* Item 2");
     });

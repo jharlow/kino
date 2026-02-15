@@ -17,7 +17,7 @@ export class MarkdownListBlock extends MarkdownMultilineBlock {
   public render(options?: OptionalRenderingOptions): string | null {
     if (this.isEmpty) return null;
     const indent =
-      options?.enforceIndentation?.list ?? this.$indent ?? this._defaultIndent;
+      options?.enforce?.list?.indent ?? this.$indent ?? this._defaultIndent;
     return this.$lines
       .map((line) => {
         if (line instanceof MarkdownListBlock) {

@@ -69,21 +69,21 @@ describe("MarkdownUnorderedListItemBlock", () => {
     expect(b.listItem.unordered("item").getMetadataTags()).toEqual([]);
   });
 
-  it("should respect enforceStyles.unorderedListItem option", () => {
+  it("should respect enforce.unorderedListItem option", () => {
     const block = b.listItem.unordered("item");
     expect(
-      block.render({ enforceStyles: { unorderedListItem: "*" } }),
+      block.render({ enforce: { unorderedListItem: { style: "*" } } }),
     ).toBe("* item");
   });
 
-  it("should let enforceStyles override explicit style", () => {
+  it("should let enforce override explicit style", () => {
     const block = b.listItem.unordered("item").style("+");
     expect(
-      block.render({ enforceStyles: { unorderedListItem: "*" } }),
+      block.render({ enforce: { unorderedListItem: { style: "*" } } }),
     ).toBe("* item");
   });
 
-  it("should use explicit style when no enforceStyles is set", () => {
+  it("should use explicit style when no enforce is set", () => {
     const block = b.listItem.unordered("item").style("+");
     expect(block.render()).toBe("+ item");
   });

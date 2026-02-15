@@ -8,17 +8,14 @@ import { MarkdownBlockInspector } from "./markdown-block-inspector";
 import { StringReadable } from "./string-readable";
 import { PrimitiveValue } from "./values";
 
-export interface EnforceStylesOptions {
-  bold?: MarkdownBoldStyle;
-  italic?: MarkdownItalicStyle;
-  unorderedListItem?: MarkdownUnorderedListItemStyle;
-  horizontalRule?: MarkdownHorizontalRuleStyle;
-  taskItem?: MarkdownTaskItemBlockStyle;
-  tableAlign?: MarkdownTableAlignStyle;
-}
-
-export interface EnforceIndentationOptions {
-  list?: number;
+export interface EnforceOptions {
+  bold?: { style?: MarkdownBoldStyle };
+  italic?: { style?: MarkdownItalicStyle };
+  unorderedListItem?: { style?: MarkdownUnorderedListItemStyle };
+  horizontalRule?: { style?: MarkdownHorizontalRuleStyle };
+  taskItem?: { style?: MarkdownTaskItemBlockStyle };
+  table?: { align?: MarkdownTableAlignStyle };
+  list?: { indent?: number };
 }
 
 export type NewlineStrategy =
@@ -29,16 +26,14 @@ export type NewlineStrategy =
 export interface RenderingOptions {
   renderNullish: boolean;
   lineJoinString: string;
-  enforceStyles: EnforceStylesOptions;
-  enforceIndentation: EnforceIndentationOptions;
+  enforce: EnforceOptions;
   newlineStrategy: NewlineStrategy;
 }
 
 const defaultRenderingOptions: RenderingOptions = {
   renderNullish: false,
   lineJoinString: "",
-  enforceStyles: {},
-  enforceIndentation: {},
+  enforce: {},
   newlineStrategy: "none",
 };
 
@@ -47,13 +42,9 @@ export const renderingOptions = (
 ): RenderingOptions => {
   return {
     ...defaultRenderingOptions,
-    enforceStyles: {
-      ...defaultRenderingOptions.enforceStyles,
-      ...options.enforceStyles,
-    },
-    enforceIndentation: {
-      ...defaultRenderingOptions.enforceIndentation,
-      ...options.enforceIndentation,
+    enforce: {
+      ...defaultRenderingOptions.enforce,
+      ...options.enforce,
     },
     ...options,
   };

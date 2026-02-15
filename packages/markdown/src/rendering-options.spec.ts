@@ -88,60 +88,60 @@ describe("RenderingOptions", () => {
     });
   });
 
-  describe("enforceStyles.bold", () => {
+  describe("enforce.bold", () => {
     it("should override default bold style to '__'", () => {
       expect(
-        b.bold("text").render({ enforceStyles: { bold: "__" } }),
+        b.bold("text").render({ enforce: { bold: { style: "__" } } }),
       ).toBe("__text__");
     });
 
     it("should override default bold style to '**'", () => {
       expect(
-        b.bold("text").render({ enforceStyles: { bold: "**" } }),
+        b.bold("text").render({ enforce: { bold: { style: "**" } } }),
       ).toBe("**text**");
     });
 
     it("should override per-block bold style", () => {
       expect(
-        b.bold("text").style("__").render({ enforceStyles: { bold: "**" } }),
+        b.bold("text").style("__").render({ enforce: { bold: { style: "**" } } }),
       ).toBe("**text**");
     });
 
-    it("should use per-block style when no enforceStyles is set", () => {
+    it("should use per-block style when no enforce is set", () => {
       expect(b.bold("text").style("__").render()).toBe("__text__");
     });
   });
 
-  describe("enforceStyles.italic", () => {
+  describe("enforce.italic", () => {
     it("should override default italic style to '_'", () => {
       expect(
-        b.italic("text").render({ enforceStyles: { italic: "_" } }),
+        b.italic("text").render({ enforce: { italic: { style: "_" } } }),
       ).toBe("_text_");
     });
 
     it("should override default italic style to '*'", () => {
       expect(
-        b.italic("text").render({ enforceStyles: { italic: "*" } }),
+        b.italic("text").render({ enforce: { italic: { style: "*" } } }),
       ).toBe("*text*");
     });
 
     it("should override per-block italic style", () => {
       expect(
-        b.italic("text").style("_").render({ enforceStyles: { italic: "*" } }),
+        b.italic("text").style("_").render({ enforce: { italic: { style: "*" } } }),
       ).toBe("*text*");
     });
 
-    it("should use per-block style when no enforceStyles is set", () => {
+    it("should use per-block style when no enforce is set", () => {
       expect(b.italic("text").style("_").render()).toBe("_text_");
     });
   });
 
-  describe("enforceStyles.unorderedListItem", () => {
+  describe("enforce.unorderedListItem", () => {
     it("should override default unordered list item style to '*'", () => {
       expect(
         b.li
           .unordered("item")
-          .render({ enforceStyles: { unorderedListItem: "*" } }),
+          .render({ enforce: { unorderedListItem: { style: "*" } } }),
       ).toBe("* item");
     });
 
@@ -149,7 +149,7 @@ describe("RenderingOptions", () => {
       expect(
         b.li
           .unordered("item")
-          .render({ enforceStyles: { unorderedListItem: "+" } }),
+          .render({ enforce: { unorderedListItem: { style: "+" } } }),
       ).toBe("+ item");
     });
 
@@ -158,11 +158,11 @@ describe("RenderingOptions", () => {
         b.li
           .unordered("item")
           .style("*")
-          .render({ enforceStyles: { unorderedListItem: "+" } }),
+          .render({ enforce: { unorderedListItem: { style: "+" } } }),
       ).toBe("+ item");
     });
 
-    it("should use per-item style when no enforceStyles is set", () => {
+    it("should use per-item style when no enforce is set", () => {
       expect(b.li.unordered("item").style("*").render()).toBe("* item");
     });
 
@@ -170,47 +170,47 @@ describe("RenderingOptions", () => {
       expect(
         b.list
           .unordered("one", "two")
-          .render({ enforceStyles: { unorderedListItem: "+" } }),
+          .render({ enforce: { unorderedListItem: { style: "+" } } }),
       ).toBe("+ one\n+ two");
     });
   });
 
-  describe("enforceStyles.horizontalRule", () => {
+  describe("enforce.horizontalRule", () => {
     it("should override default horizontal rule style to '*'", () => {
       expect(
-        b.hr().render({ enforceStyles: { horizontalRule: "*" } }),
+        b.hr().render({ enforce: { horizontalRule: { style: "*" } } }),
       ).toBe("\n***\n");
     });
 
     it("should override default horizontal rule style to '_'", () => {
       expect(
-        b.hr().render({ enforceStyles: { horizontalRule: "_" } }),
+        b.hr().render({ enforce: { horizontalRule: { style: "_" } } }),
       ).toBe("\n___\n");
     });
 
     it("should override per-block style", () => {
       expect(
-        b.hr().style("*").render({ enforceStyles: { horizontalRule: "_" } }),
+        b.hr().style("*").render({ enforce: { horizontalRule: { style: "_" } } }),
       ).toBe("\n___\n");
     });
 
-    it("should use per-block style when no enforceStyles is set", () => {
+    it("should use per-block style when no enforce is set", () => {
       expect(b.hr().style("*").render()).toBe("\n***\n");
     });
 
     it("should respect count when enforcing style", () => {
       expect(
-        b.hr().count(5).render({ enforceStyles: { horizontalRule: "*" } }),
+        b.hr().count(5).render({ enforce: { horizontalRule: { style: "*" } } }),
       ).toBe("\n*****\n");
     });
   });
 
-  describe("enforceStyles.taskItem", () => {
+  describe("enforce.taskItem", () => {
     it("should override default task item style to 'X'", () => {
       expect(
         b.li
           .task(true, "done")
-          .render({ enforceStyles: { taskItem: "X" } }),
+          .render({ enforce: { taskItem: { style: "X" } } }),
       ).toBe("- [X] done");
     });
 
@@ -218,7 +218,7 @@ describe("RenderingOptions", () => {
       expect(
         b.li
           .task(true, "done")
-          .render({ enforceStyles: { taskItem: "x" } }),
+          .render({ enforce: { taskItem: { style: "x" } } }),
       ).toBe("- [x] done");
     });
 
@@ -227,7 +227,7 @@ describe("RenderingOptions", () => {
         b.li
           .task(true, "done")
           .style("X")
-          .render({ enforceStyles: { taskItem: "x" } }),
+          .render({ enforce: { taskItem: { style: "x" } } }),
       ).toBe("- [x] done");
     });
 
@@ -235,7 +235,7 @@ describe("RenderingOptions", () => {
       expect(
         b.li
           .task(false, "not done")
-          .render({ enforceStyles: { taskItem: "X" } }),
+          .render({ enforce: { taskItem: { style: "X" } } }),
       ).toBe("- [ ] not done");
     });
 
@@ -243,16 +243,16 @@ describe("RenderingOptions", () => {
       expect(
         b.list
           .tasks([true, "one"], [false, "two"], [true, "three"])
-          .render({ enforceStyles: { taskItem: "X" } }),
+          .render({ enforce: { taskItem: { style: "X" } } }),
       ).toBe("- [X] one\n- [ ] two\n- [X] three");
     });
   });
 
-  describe("enforceStyles.tableAlign", () => {
+  describe("enforce.table", () => {
     it("should override default table alignment to 'left'", () => {
       const result = b
         .table({ a: "A", b: "B" }, { a: "1", b: "2" })
-        .render({ enforceStyles: { tableAlign: "left" } });
+        .render({ enforce: { table: { align: "left" } } });
       expect(result).toContain(":---");
       expect(result).not.toContain("---:");
       expect(result).not.toContain(":---:");
@@ -261,14 +261,14 @@ describe("RenderingOptions", () => {
     it("should override default table alignment to 'center'", () => {
       const result = b
         .table({ a: "A", b: "B" }, { a: "1", b: "2" })
-        .render({ enforceStyles: { tableAlign: "center" } });
+        .render({ enforce: { table: { align: "center" } } });
       expect(result).toContain(":---:");
     });
 
     it("should override default table alignment to 'right'", () => {
       const result = b
         .table({ a: "A", b: "B" }, { a: "1", b: "2" })
-        .render({ enforceStyles: { tableAlign: "right" } });
+        .render({ enforce: { table: { align: "right" } } });
       expect(result).toContain("---:");
     });
 
@@ -278,7 +278,7 @@ describe("RenderingOptions", () => {
         { a: "1", b: "2" },
       );
       const result = tbl.render({
-        enforceStyles: { tableAlign: "right" },
+        enforce: { table: { align: "right" } },
       });
       expect(result).toContain("---:");
       expect(result).not.toContain(":---" + " ");
@@ -289,19 +289,19 @@ describe("RenderingOptions", () => {
         .table({ a: "A", b: "B" }, { a: "1", b: "2" })
         .style("left");
       const result = tbl.render({
-        enforceStyles: { tableAlign: "center" },
+        enforce: { table: { align: "center" } },
       });
       expect(result).toContain(":---:");
     });
   });
 
-  describe("enforceIndentation.list", () => {
+  describe("enforce.list", () => {
     it("should override default list indentation", () => {
       const list = b.list.unordered(
         "item 1",
         b.list.unordered("nested"),
       );
-      const result = list.render({ enforceIndentation: { list: 4 } });
+      const result = list.render({ enforce: { list: { indent: 4 } } });
       expect(result).toBe("- item 1\n    - nested");
     });
 
@@ -309,7 +309,7 @@ describe("RenderingOptions", () => {
       const list = b.list
         .unordered("item 1", b.list.unordered("nested"))
         .indent(2);
-      const result = list.render({ enforceIndentation: { list: 6 } });
+      const result = list.render({ enforce: { list: { indent: 6 } } });
       expect(result).toBe("- item 1\n      - nested");
     });
 
@@ -318,7 +318,7 @@ describe("RenderingOptions", () => {
         "item 1",
         b.list.ordered("nested"),
       );
-      const result = list.render({ enforceIndentation: { list: 4 } });
+      const result = list.render({ enforce: { list: { indent: 4 } } });
       expect(result).toBe("1. item 1\n    1. nested");
     });
 
@@ -327,7 +327,7 @@ describe("RenderingOptions", () => {
         [true, "item 1"],
         b.list.tasks([false, "nested"]),
       );
-      const result = list.render({ enforceIndentation: { list: 4 } });
+      const result = list.render({ enforce: { list: { indent: 4 } } });
       expect(result).toBe("- [x] item 1\n    - [ ] nested");
     });
   });
@@ -434,8 +434,7 @@ describe("RenderingOptions", () => {
       const opts = b.renderingOptions({});
       expect(opts.renderNullish).toBe(false);
       expect(opts.lineJoinString).toBe("");
-      expect(opts.enforceStyles).toEqual({});
-      expect(opts.enforceIndentation).toEqual({});
+      expect(opts.enforce).toEqual({});
       expect(opts.newlineStrategy).toBe("none");
     });
 
@@ -450,24 +449,24 @@ describe("RenderingOptions", () => {
       expect(opts.newlineStrategy).toBe("between_blocks");
     });
 
-    it("should merge enforceStyles", () => {
+    it("should merge enforce", () => {
       const opts = b.renderingOptions({
-        enforceStyles: { bold: "__", italic: "_" },
+        enforce: { bold: { style: "__" }, italic: { style: "_" } },
       });
-      expect(opts.enforceStyles.bold).toBe("__");
-      expect(opts.enforceStyles.italic).toBe("_");
+      expect(opts.enforce.bold?.style).toBe("__");
+      expect(opts.enforce.italic?.style).toBe("_");
     });
 
-    it("should merge enforceIndentation", () => {
+    it("should merge enforce.list", () => {
       const opts = b.renderingOptions({
-        enforceIndentation: { list: 4 },
+        enforce: { list: { indent: 4 } },
       });
-      expect(opts.enforceIndentation.list).toBe(4);
+      expect(opts.enforce.list?.indent).toBe(4);
     });
 
     it("should be usable as input to render()", () => {
       const opts = b.renderingOptions({
-        enforceStyles: { bold: "__" },
+        enforce: { bold: { style: "__" } },
       });
       expect(b.bold("text").render(opts)).toBe("__text__");
     });
@@ -495,17 +494,17 @@ describe("RenderingOptions", () => {
       expect(doc.render({ newlineStrategy: "none" })).toBe("one\ntwo");
     });
 
-    it("should override block-level enforceStyles", () => {
+    it("should override block-level enforce", () => {
       const block = b.bold("text").setRenderingOptions({
-        enforceStyles: { bold: "__" },
+        enforce: { bold: { style: "__" } },
       });
-      expect(block.render({ enforceStyles: { bold: "**" } })).toBe(
+      expect(block.render({ enforce: { bold: { style: "**" } } })).toBe(
         "**text**",
       );
     });
   });
 
-  describe("multiple enforceStyles combined", () => {
+  describe("multiple enforce options combined", () => {
     it("should enforce bold, italic, and unorderedListItem simultaneously", () => {
       const doc = b.doc(
         b.list.unordered(
@@ -513,10 +512,10 @@ describe("RenderingOptions", () => {
         ),
       );
       const result = doc.render({
-        enforceStyles: {
-          bold: "__",
-          italic: "_",
-          unorderedListItem: "*",
+        enforce: {
+          bold: { style: "__" },
+          italic: { style: "_" },
+          unorderedListItem: { style: "*" },
         },
       });
       expect(result).toBe("* __strong__ and _emphasis_");
@@ -527,9 +526,9 @@ describe("RenderingOptions", () => {
         b.list.tasks([true, b.bold("important task")]),
       );
       const result = doc.render({
-        enforceStyles: {
-          taskItem: "X",
-          bold: "__",
+        enforce: {
+          taskItem: { style: "X" },
+          bold: { style: "__" },
         },
       });
       expect(result).toBe("- [X] __important task__");
@@ -542,9 +541,9 @@ describe("RenderingOptions", () => {
         b.italic("more"),
       );
       const result = doc.render({
-        enforceStyles: {
-          horizontalRule: "*",
-          italic: "_",
+        enforce: {
+          horizontalRule: { style: "*" },
+          italic: { style: "_" },
         },
       });
       expect(result).toBe("_text_\n\n***\n\n_more_");
@@ -552,20 +551,20 @@ describe("RenderingOptions", () => {
   });
 
   describe("options propagation through nested blocks", () => {
-    it("should propagate enforceStyles.bold through a document to nested bold blocks", () => {
+    it("should propagate enforce.bold through a document to nested bold blocks", () => {
       const doc = b.doc(
         b.p(b.bold("outer")),
         b.sec(b.p(b.bold("inner"))),
       );
-      const result = doc.render({ enforceStyles: { bold: "__" } });
+      const result = doc.render({ enforce: { bold: { style: "__" } } });
       expect(result).toBe("__outer__\n__inner__");
     });
 
-    it("should propagate enforceStyles.italic through blockquotes", () => {
+    it("should propagate enforce.italic through blockquotes", () => {
       const doc = b.doc(
         b.bq(b.italic("quoted emphasis")),
       );
-      const result = doc.render({ enforceStyles: { italic: "_" } });
+      const result = doc.render({ enforce: { italic: { style: "_" } } });
       expect(result).toBe("> _quoted emphasis_");
     });
 
@@ -577,23 +576,23 @@ describe("RenderingOptions", () => {
       expect(result).toBe("a **b c**");
     });
 
-    it("should propagate enforceStyles.unorderedListItem through nested lists", () => {
+    it("should propagate enforce.unorderedListItem through nested lists", () => {
       const list = b.list.unordered(
         "top",
         b.list.unordered("nested"),
       );
       const result = list.render({
-        enforceStyles: { unorderedListItem: "+" },
+        enforce: { unorderedListItem: { style: "+" } },
       });
       expect(result).toBe("+ top\n  + nested");
     });
 
-    it("should propagate enforceIndentation.list through deeply nested lists", () => {
+    it("should propagate enforce.list through deeply nested lists", () => {
       const list = b.list.unordered(
         "level 1",
         b.list.unordered("level 2", b.list.unordered("level 3")),
       );
-      const result = list.render({ enforceIndentation: { list: 4 } });
+      const result = list.render({ enforce: { list: { indent: 4 } } });
       expect(result).toBe(
         "- level 1\n    - level 2\n        - level 3",
       );
@@ -629,11 +628,11 @@ describe("RenderingOptions", () => {
         b.hr(),
       );
       const result = doc.render({
-        enforceStyles: {
-          bold: "__",
-          italic: "_",
-          unorderedListItem: "*",
-          horizontalRule: "*",
+        enforce: {
+          bold: { style: "__" },
+          italic: { style: "_" },
+          unorderedListItem: { style: "*" },
+          horizontalRule: { style: "*" },
         },
         newlineStrategy: "between_blocks",
       });

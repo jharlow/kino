@@ -22,7 +22,7 @@ export class MarkdownUnorderedListItemBlock extends MarkdownLineBlock {
     const content = super.render(options);
     if (content === null) return null;
     const style =
-      options?.enforceStyles?.unorderedListItem ??
+      options?.enforce?.unorderedListItem?.style ??
       this.$style ??
       this._defaultStyle;
     return `${style} ${content}`;

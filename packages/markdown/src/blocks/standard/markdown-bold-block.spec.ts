@@ -51,16 +51,16 @@ describe("MarkdownBoldBlock", () => {
     expect(String(b.b("text"))).toBe("**text**");
   });
 
-  it("should respect enforceStyles.bold option", () => {
+  it("should respect enforce.bold option", () => {
     const block = b.bold("text");
-    expect(block.render({ enforceStyles: { bold: "__" } })).toBe(
+    expect(block.render({ enforce: { bold: { style: "__" } } })).toBe(
       "__text__",
     );
   });
 
-  it("should let enforceStyles override explicit style", () => {
+  it("should let enforce override explicit style", () => {
     const block = b.bold("text").style("__");
-    expect(block.render({ enforceStyles: { bold: "**" } })).toBe(
+    expect(block.render({ enforce: { bold: { style: "**" } } })).toBe(
       "**text**",
     );
   });

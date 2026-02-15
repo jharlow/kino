@@ -25,7 +25,7 @@ export class MarkdownHorizontalRuleBlock extends MarkdownLineBlock {
 
   public render(options?: OptionalRenderingOptions): string | null {
     const style =
-      options?.enforceStyles?.horizontalRule ??
+      options?.enforce?.horizontalRule?.style ??
       this.$style ??
       this._defaultStyle;
     return `\n${style.repeat(this.$count ?? this._defaultCount)}\n`;

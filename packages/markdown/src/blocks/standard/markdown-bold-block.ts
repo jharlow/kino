@@ -20,7 +20,7 @@ export class MarkdownBoldBlock extends MarkdownInlineBlock {
     const content = super.render(options);
     if (content === null || this.isEmpty) return null;
     const style =
-      options?.enforceStyles?.bold ?? this.$style ?? this._defaultStyle;
+      options?.enforce?.bold?.style ?? this.$style ?? this._defaultStyle;
     return `${style}${content}${style}`;
   }
 

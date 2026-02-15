@@ -34,15 +34,15 @@ describe("MarkdownHorizontalRuleBlock", () => {
     expect(b.hr().style("*").count(5).render()).toBe("\n*****\n");
   });
 
-  it("should respect enforceStyles.horizontalRule", () => {
+  it("should respect enforce.horizontalRule", () => {
     expect(
-      b.hr().render({ enforceStyles: { horizontalRule: "*" } }),
+      b.hr().render({ enforce: { horizontalRule: { style: "*" } } }),
     ).toBe("\n***\n");
   });
 
-  it("should let enforceStyles override explicit style", () => {
+  it("should let enforce override explicit style", () => {
     expect(
-      b.hr().style("_").render({ enforceStyles: { horizontalRule: "*" } }),
+      b.hr().style("_").render({ enforce: { horizontalRule: { style: "*" } } }),
     ).toBe("\n***\n");
   });
 

@@ -19,7 +19,7 @@ export class MarkdownItalicBlock extends MarkdownInlineBlock {
     const content = super.render(options);
     if (content === null || this.isEmpty) return null;
     const style =
-      options?.enforceStyles?.italic ?? this.$style ?? this._defaultStyle;
+      options?.enforce?.italic?.style ?? this.$style ?? this._defaultStyle;
     return `${style}${content}${style}`;
   }
 

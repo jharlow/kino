@@ -52,8 +52,7 @@ import { markdown, md } from "./parsing/markdown-literal";
 // Primitives
 export { MarkdownBlock } from "./blocks/primitives/markdown-block";
 export type {
-  EnforceStylesOptions,
-  EnforceIndentationOptions,
+  EnforceOptions,
   NewlineStrategy,
   RenderingOptions,
   OptionalRenderingOptions,

@@ -65,22 +65,22 @@ describe("MarkdownUnorderedListBlock", () => {
     expect(String(nested)).toBe("- parent\n    - child");
   });
 
-  it("should respect enforceIndentation.list option", () => {
+  it("should respect enforce.list option", () => {
     const nested = b.list.unordered(
       "parent",
       b.list.unordered("child"),
     );
-    expect(nested.render({ enforceIndentation: { list: 4 } })).toBe(
+    expect(nested.render({ enforce: { list: { indent: 4 } } })).toBe(
       "- parent\n    - child",
     );
   });
 
-  it("should let enforceIndentation override explicit indent", () => {
+  it("should let enforce override explicit indent", () => {
     const nested = b.list.unordered(
       "parent",
       b.list.unordered("child"),
     ).indent(4);
-    expect(nested.render({ enforceIndentation: { list: 3 } })).toBe(
+    expect(nested.render({ enforce: { list: { indent: 3 } } })).toBe(
       "- parent\n   - child",
     );
   });

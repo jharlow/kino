@@ -51,16 +51,16 @@ describe("MarkdownItalicBlock", () => {
     expect(String(b.i("text"))).toBe("*text*");
   });
 
-  it("should respect enforceStyles.italic option", () => {
+  it("should respect enforce.italic option", () => {
     const block = b.italic("text");
-    expect(block.render({ enforceStyles: { italic: "_" } })).toBe(
+    expect(block.render({ enforce: { italic: { style: "_" } } })).toBe(
       "_text_",
     );
   });
 
-  it("should let enforceStyles override explicit style", () => {
+  it("should let enforce override explicit style", () => {
     const block = b.italic("text").style("_");
-    expect(block.render({ enforceStyles: { italic: "*" } })).toBe(
+    expect(block.render({ enforce: { italic: { style: "*" } } })).toBe(
       "*text*",
     );
   });

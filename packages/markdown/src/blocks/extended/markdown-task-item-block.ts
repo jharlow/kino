@@ -33,7 +33,7 @@ export class MarkdownTaskItemBlock extends MarkdownLineBlock {
     const content = super.render(options);
     if (content === null) return null;
     const style =
-      options?.enforceStyles?.taskItem ?? this.$style ?? this._defaultStyle;
+      options?.enforce?.taskItem?.style ?? this.$style ?? this._defaultStyle;
     return `- [${this.$checked ? style : this._SPACE_STRING}] ${content}`;
   }
 

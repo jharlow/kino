@@ -148,7 +148,7 @@ export class MarkdownTableBlock<
     options?: OptionalRenderingOptions,
   ): string {
     const align =
-      options?.enforceStyles?.tableAlign ?? col.align ?? this.$style;
+      options?.enforce?.table?.align ?? col.align ?? this.$style;
     const w = Math.max(3, width);
     if (align === "left") {
       const marker = ":---";

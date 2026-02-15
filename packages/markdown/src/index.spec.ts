@@ -474,15 +474,15 @@ describe("parse", () => {
     expect(String(doc)).toBe(input);
   });
 
-  it("should apply enforceStyles to parsed bold", () => {
+  it("should apply enforce to parsed bold", () => {
     const doc = b.parse("**hello**");
-    doc.setRenderingOptions({ enforceStyles: { bold: "__" } });
+    doc.setRenderingOptions({ enforce: { bold: { style: "__" } } });
     expect(String(doc)).toBe("__hello__");
   });
 
-  it("should apply enforceStyles to parsed italic", () => {
+  it("should apply enforce to parsed italic", () => {
     const doc = b.parse("*hello*");
-    doc.setRenderingOptions({ enforceStyles: { italic: "_" } });
+    doc.setRenderingOptions({ enforce: { italic: { style: "_" } } });
     expect(String(doc)).toBe("_hello_");
   });
 
@@ -694,9 +694,9 @@ describe("MarkdownTableBlock", () => {
     expect(`${t}`).toBe("| A | B |\n| ---: | :---: |");
   });
 
-  it("should apply enforceStyles.tableAlign from rendering options", () => {
+  it("should apply enforce.table.align from rendering options", () => {
     const t = b.table({ a: "A", b: "B" });
-    t.setRenderingOptions({ enforceStyles: { tableAlign: "right" } });
+    t.setRenderingOptions({ enforce: { table: { align: "right" } } });
     expect(`${t}`).toBe("| A | B |\n| ---: | ---: |");
   });
 
