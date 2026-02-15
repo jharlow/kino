@@ -112,13 +112,22 @@ export abstract class MarkdownBlock implements StringReadable {
 
   protected dedent(content: string): string {
     const lines = content.split("\n");
-    const nonEmptyLines = lines.filter((l) => l.trim() !== "");
-    if (nonEmptyLines.length === 0) return content;
+    // Remove empty lines at the start
+    let start = 0;
+    while (start < lines.length && lines[start].trim() === "") start++;
+    // Remove empty lines at the end
+    let end = lines.length - 1;
+    while (end >= 0 && lines[end].trim() === "") end--;
+    const trimmedLines = lines.slice(start, end + 1);
+    const nonEmptyLines = trimmedLines.filter((l) => l.trim() !== "");
+    if (nonEmptyLines.length === 0) return "";
     const minIndent = Math.min(
       ...nonEmptyLines.map((l) => (l.match(/^(\s*)/) ?? ["", ""])[1].length),
     );
-    if (minIndent === 0) return content;
-    return lines.map((l) => l.slice(Math.min(minIndent, l.length))).join("\n");
+    if (minIndent === 0) return trimmedLines.join("\n");
+    return trimmedLines
+      .map((l) => l.slice(Math.min(minIndent, l.length)))
+      .join("\n");
   }
 
   public getMetadataTags(): BlockMetadataTags {
