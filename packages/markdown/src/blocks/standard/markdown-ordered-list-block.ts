@@ -1,15 +1,26 @@
 import { MarkdownLineBlockContent } from "../primitives/markdown-line-block";
 import { MarkdownListBlock } from "./markdown-list-block";
 import { MarkdownOrderedListItemBlock } from "./markdown-ordered-list-item-block";
+import { MarkdownUnorderedListBlock } from "./markdown-unordered-list-block";
+import { MarkdownUnorderedListItemBlock } from "./markdown-unordered-list-item-block";
 
 export class MarkdownOrderedListBlock extends MarkdownListBlock {
   constructor(...lines: Array<MarkdownLineBlockContent | MarkdownListBlock>) {
+    const nonListCount = lines.filter(
+      (l) => !(l instanceof MarkdownListBlock),
+    ).length;
+    const hasNestedUnordered = lines.some(
+      (l) => l instanceof MarkdownUnorderedListBlock,
+    );
+    const useUnordered = nonListCount === 1 && hasNestedUnordered;
     let itemIndex = 1;
     super(
       ...lines.map((line) =>
         line instanceof MarkdownListBlock
           ? line
-          : new MarkdownOrderedListItemBlock(itemIndex++, line),
+          : useUnordered
+            ? new MarkdownUnorderedListItemBlock(line)
+            : new MarkdownOrderedListItemBlock(itemIndex++, line),
       ),
     );
   }

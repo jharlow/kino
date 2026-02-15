@@ -163,4 +163,16 @@ describe("MarkdownLiteral", () => {
       "This is some text\nAnd this is some more text\n```hi\nHello world\nhi\n```\n- Item A\n  - Item B\n  - Item C",
     );
   });
+
+  it("should embed into details correctly", () => {
+    const literal = b.md`
+    This is some text
+    And this is some more text
+    ${b.code("Hello world", "hi")}
+    ${b.list.ol("Item A", b.list.ul("Item B", "Item C"))}
+    `.details("summary");
+    expect(String(literal)).toBe(
+      "This is some text\nAnd this is some more text\n```hi\nHello world\nhi\n```\n- Item A\n  - Item B\n  - Item C",
+    );
+  });
 });

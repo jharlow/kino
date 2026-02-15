@@ -12,6 +12,7 @@ import { MarkdownMultilineBlockContent } from "../primitives/markdown-multiline-
 export type MarkdownCodeBlockLanguage = string;
 export class MarkdownCodeBlock extends MarkdownInlineBlock {
   public $language: MarkdownCodeBlockLanguage | undefined;
+  public $backtickCount: number = 1;
 
   constructor(...line: Array<MarkdownMultilineBlockContent>) {
     super(...(line as Array<MarkdownInlineBlockContent>));
@@ -23,7 +24,11 @@ export class MarkdownCodeBlock extends MarkdownInlineBlock {
   }
 
   public render(options?: OptionalRenderingOptions): string | null {
-    const content = super.render(options);
+    const renderOptions =
+      this.$content.length > 1
+        ? { ...options, lineJoinString: "\n" }
+        : options;
+    const content = super.render(renderOptions);
     // Remove empty lines at the start and end if this.$trim is true
     let processedContent = content;
     if (this.$trim && processedContent !== null) {
@@ -41,7 +46,8 @@ export class MarkdownCodeBlock extends MarkdownInlineBlock {
     if (processedContent === null) return null;
     const containsNewlines = processedContent.includes("\n");
     if (!this.$language && this.$content.length === 1 && !containsNewlines) {
-      return `\`${content}\``;
+      const tick = "`".repeat(this.$backtickCount);
+      return `${tick}${content}${tick}`;
     }
     return `\`\`\`${this.$language ?? this._EMPTY_STRING}\n${processedContent}\n\`\`\``;
   }
@@ -56,6 +62,13 @@ export class MarkdownCodeBlock extends MarkdownInlineBlock {
 export const codeblock = (
   ...lines: Array<MarkdownLineBlockContent>
 ): MarkdownCodeBlock => {
-  return new MarkdownCodeBlock(...lines);
+  const block = new MarkdownCodeBlock(...lines);
+  if (lines.length >= 2) {
+    const last = lines[lines.length - 1];
+    if (typeof last === "string" && /^\w+$/.test(last)) {
+      block.language(last);
+    }
+  }
+  return block;
 };
 export const code = codeblock;

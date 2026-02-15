@@ -79,7 +79,40 @@ export class MarkdownBlockParser {
     };
 
     while (i < text.length) {
-      // 1. Code span
+      // 1a. Triple backtick code span: ```content```
+      if (
+        text[i] === "`" &&
+        i + 2 < text.length &&
+        text[i + 1] === "`" &&
+        text[i + 2] === "`"
+      ) {
+        const end = text.indexOf("```", i + 3);
+        if (end !== -1) {
+          flush();
+          const rawContent = text.slice(i + 3, end);
+          if (rawContent.includes("\n")) {
+            // Multi-line: first line may be language tag
+            const firstNewline = rawContent.indexOf("\n");
+            const firstLine = rawContent.slice(0, firstNewline);
+            const rest = rawContent.slice(firstNewline + 1);
+            const content = rest.endsWith("\n") ? rest.slice(0, -1) : rest;
+            const cb = new MarkdownCodeBlock(content);
+            if (/^\w+$/.test(firstLine)) {
+              cb.language(firstLine);
+            }
+            result.push(cb);
+          } else {
+            // Single-line: inline triple backtick
+            const cb = new MarkdownCodeBlock(rawContent);
+            cb.$backtickCount = 3;
+            result.push(cb);
+          }
+          i = end + 3;
+          continue;
+        }
+      }
+
+      // 1b. Code span
       if (text[i] === "`") {
         const end = text.indexOf("`", i + 1);
         if (end !== -1) {
@@ -579,7 +612,29 @@ export class MarkdownBlockParser {
         continue;
       }
 
-      // 10. Everything else
+      // 10. Inline code fence spanning multiple lines
+      if (line.includes("```") && !line.match(/^```/)) {
+        let endLine = -1;
+        for (let j = i + 1; j < lines.length; j++) {
+          if (lines[j].includes("```")) {
+            endLine = j;
+            break;
+          }
+        }
+        if (endLine !== -1) {
+          const combinedText = lines.slice(i, endLine + 1).join("\n");
+          const parsed = this.parseInline(combinedText);
+          result.push(
+            new MarkdownParagraphBlock(
+              ...(parsed as MarkdownLineBlockContent[]),
+            ),
+          );
+          i = endLine + 1;
+          continue;
+        }
+      }
+
+      // 11. Everything else
       if (line === "") {
         result.push(new MarkdownLineBreakBlock());
       } else {

@@ -31,7 +31,6 @@ export class MarkdownDetailsBlock extends MarkdownMultilineBlock {
       )
       .join("\n");
     const renderedContent = super.render(options);
-    console.log("renderedContent", renderedContent);
     const indentedContent = renderedContent
       ? renderedContent
           .split("\n")
