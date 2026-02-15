@@ -21,6 +21,12 @@ export class MarkdownLineBlock extends MarkdownBlock {
     return this.emptyIf(!condition);
   }
 
+  public change(
+    fn: (block: MarkdownLineBlock) => MarkdownLineBlock,
+  ): MarkdownLineBlock {
+    return fn(this);
+  }
+
   public defaultIfEmpty(...line: Array<MarkdownLineBlockContent>): this {
     if (!this.isEmpty) return this;
     this.$line = line;

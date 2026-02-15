@@ -1,4 +1,4 @@
-import { BlockMetadataTags } from "../blocks/primitives/markdown-block";
+import { BlockMetadataTags, OptionalRenderingOptions } from "../blocks/primitives/markdown-block";
 import {
   MarkdownInlineBlock,
   MarkdownInlineBlockContent,
@@ -17,8 +17,8 @@ export class MarkdownLiteral extends MarkdownInlineBlock {
     return new MarkdownBlockParser().parse(this.render() ?? "");
   }
 
-  public render(): string | null {
-    const content = super.render();
+  public render(options?: OptionalRenderingOptions): string | null {
+    const content = super.render(options);
     if (content === null) return null;
     return content;
   }

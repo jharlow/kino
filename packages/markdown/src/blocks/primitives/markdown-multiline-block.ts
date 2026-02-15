@@ -41,6 +41,12 @@ export class MarkdownMultilineBlock<
     return this.emptyIf(!condition);
   }
 
+  public change(
+    fn: (block: MarkdownMultilineBlock<OPTS>) => MarkdownMultilineBlock<OPTS>,
+  ): MarkdownMultilineBlock<OPTS> {
+    return fn(this);
+  }
+
   public defaultIfEmpty(
     ...lines: Array<MarkdownMultilineBlockContent<OPTS>>
   ): this {

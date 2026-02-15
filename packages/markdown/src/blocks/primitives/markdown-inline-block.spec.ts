@@ -133,45 +133,45 @@ describe("MarkdownInlineBlock", () => {
   });
 
   describe("emptyIf()", () => {
-    it("should keep content when condition is truthy", () => {
+    it("should clear content when condition is truthy", () => {
       const block = new MarkdownInlineBlock("text").emptyIf(true);
-      expect(block.render()).toBe("text");
-    });
-
-    it("should clear content when condition is falsy (false)", () => {
-      const block = new MarkdownInlineBlock("text").emptyIf(false);
       expect(block.render()).toBeNull();
       expect(block.$content).toEqual([]);
     });
 
-    it("should clear content when condition is falsy (0)", () => {
+    it("should keep content when condition is falsy (false)", () => {
+      const block = new MarkdownInlineBlock("text").emptyIf(false);
+      expect(block.render()).toBe("text");
+    });
+
+    it("should keep content when condition is falsy (0)", () => {
       const block = new MarkdownInlineBlock("text").emptyIf(0);
-      expect(block.render()).toBeNull();
+      expect(block.render()).toBe("text");
     });
 
-    it("should clear content when condition is falsy (null)", () => {
+    it("should keep content when condition is falsy (null)", () => {
       const block = new MarkdownInlineBlock("text").emptyIf(null);
-      expect(block.render()).toBeNull();
+      expect(block.render()).toBe("text");
     });
 
-    it("should clear content when condition is falsy (undefined)", () => {
+    it("should keep content when condition is falsy (undefined)", () => {
       const block = new MarkdownInlineBlock("text").emptyIf(undefined);
-      expect(block.render()).toBeNull();
+      expect(block.render()).toBe("text");
     });
 
-    it("should clear content when condition is falsy (empty string)", () => {
+    it("should keep content when condition is falsy (empty string)", () => {
       const block = new MarkdownInlineBlock("text").emptyIf("");
+      expect(block.render()).toBe("text");
+    });
+
+    it("should clear content when condition is truthy (non-zero number)", () => {
+      const block = new MarkdownInlineBlock("text").emptyIf(1);
       expect(block.render()).toBeNull();
     });
 
-    it("should keep content when condition is truthy (non-zero number)", () => {
-      const block = new MarkdownInlineBlock("text").emptyIf(1);
-      expect(block.render()).toBe("text");
-    });
-
-    it("should keep content when condition is truthy (non-empty string)", () => {
+    it("should clear content when condition is truthy (non-empty string)", () => {
       const block = new MarkdownInlineBlock("text").emptyIf("yes");
-      expect(block.render()).toBe("text");
+      expect(block.render()).toBeNull();
     });
 
     it("should return the same block instance", () => {

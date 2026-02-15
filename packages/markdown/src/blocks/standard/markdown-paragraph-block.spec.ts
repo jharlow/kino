@@ -63,12 +63,12 @@ describe("MarkdownParagraphBlock", () => {
     );
   });
 
-  it("should clear content when emptyIf condition is falsy", () => {
-    expect(b.p("text").emptyIf(false).render()).toBeNull();
+  it("should clear content when emptyIf condition is truthy", () => {
+    expect(b.p("text").emptyIf(true).render()).toBeNull();
   });
 
-  it("should keep content when emptyIf condition is truthy", () => {
-    expect(b.p("text").emptyIf(true).render()).toBe("text");
+  it("should keep content when emptyIf condition is falsy", () => {
+    expect(b.p("text").emptyIf(false).render()).toBe("text");
   });
 
   it("should clear content when .if() condition is falsy", () => {

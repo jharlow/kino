@@ -314,7 +314,7 @@ describe("integration: block composition in documents and sections", () => {
 
   describe("emptyIf/defaultIfEmpty in composition", () => {
     it("should conditionally exclude content from a document", () => {
-      const showOptional = false;
+      const showOptional = true;
       const doc = b.doc(
         "Always visible",
         b.p("Optional content").emptyIf(showOptional),
@@ -333,8 +333,8 @@ describe("integration: block composition in documents and sections", () => {
       expect(String(doc)).toBe("Header\nNo content available\nFooter");
     });
 
-    it("should keep content when emptyIf condition is truthy", () => {
-      const doc = b.doc("Header", b.p("Visible").emptyIf(true), "Footer");
+    it("should keep content when emptyIf condition is falsy", () => {
+      const doc = b.doc("Header", b.p("Visible").emptyIf(false), "Footer");
       expect(String(doc)).toBe("Header\nVisible\nFooter");
     });
 

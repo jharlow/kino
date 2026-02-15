@@ -57,6 +57,12 @@ export class MarkdownInlineBlock extends MarkdownBlock {
     return this.emptyIf(!condition);
   }
 
+  public change(
+    fn: (block: MarkdownInlineBlock) => MarkdownInlineBlock,
+  ): MarkdownInlineBlock {
+    return fn(this);
+  }
+
   public defaultIfEmpty(...content: Array<MarkdownInlineBlockContent>): this {
     if (!this.isEmpty) return this;
     this.$content = content;

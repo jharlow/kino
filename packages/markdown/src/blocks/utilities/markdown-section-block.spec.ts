@@ -165,12 +165,12 @@ describe("MarkdownSectionBlock", () => {
     expect(+b.sec()).toBe(0);
   });
 
-  it("should keep content when emptyIf condition is truthy", () => {
-    expect(String(b.sec("text").emptyIf(true))).toBe("text");
+  it("should clear content when emptyIf condition is truthy", () => {
+    expect(b.sec("text").emptyIf(true).isEmpty).toBe(true);
   });
 
-  it("should clear content when emptyIf condition is falsy", () => {
-    expect(b.sec("text").emptyIf(false).isEmpty).toBe(true);
+  it("should keep content when emptyIf condition is falsy", () => {
+    expect(String(b.sec("text").emptyIf(false))).toBe("text");
   });
 
   it("should set default content when empty via defaultIfEmpty()", () => {

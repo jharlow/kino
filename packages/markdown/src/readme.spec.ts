@@ -1,5 +1,10 @@
 import { test } from "vitest";
-import { b, MarkdownDocument } from "./index";
+import {
+  b,
+  MarkdownBlock,
+  MarkdownDocument,
+  MarkdownInlineBlock,
+} from "./index";
 
 test("readme", () => {
   const doc = b
@@ -20,16 +25,45 @@ test("readme", () => {
       ),
     )
     .setRenderingOptions({ newlineStrategy: "between_blocks" });
-  console.log(String(doc));
-  console.log(b.b("hi").i("_").h(2).id("text").render());
+  // console.log(String(doc));
+  // console.log(b.b("hi").i("_").h(2).id("text").render());
 
-  type User = { name?: string; email?: string };
-  const createUserDoc = (user: User, short?: boolean): MarkdownDocument => {
-    return b.doc(
-      b.h("User details"),
-      b.p(b.b("The users name is"), user.name).emptyIf(!user.name),
-      b.p(b.b("The users email is"), user.email).emptyIf(!user.email),
-    );
+  type User = { name?: string; email?: string; alternateEmail?: string };
+  const user: User = { email: "john.doe@example.com" };
+
+  const createUserDoc = (user: User): MarkdownDocument => {
+    const footnote = b
+      .footnote(`Alternate email: ${user.alternateEmail}`)
+      .if(user.alternateEmail);
+    return b
+      .doc(
+        b.h("User details"),
+        b.md`The users name is ${b.p(user.name).default("unknown")}`,
+        b.md`${b.b("The users email is")}: ${user.email}${footnote}`.if(
+          user.email,
+        ),
+      )
+      .if(user.name || user.email);
   };
-  console.log(String(createUserDoc({ name: "John Doe" })));
+
+  const userDoc = createUserDoc(user);
+  console.log(`${userDoc}`);
+  // # User details
+  // The users name is unknown
+  // **The users email is**: john.doe@example.com[^1]
+  //
+  // [^1]: Alternate email: john.doe@work.com
+
+  const prompt = b
+    .doc(
+      b.h("Instructions"),
+      b.p("Greet the user and introduce yourself as a helpful AI assistant."),
+      userDoc,
+      b.p("Once you have done this, call the `welcomeGiven` tool."),
+    )
+    .setRenderingOptions({
+      enforce: { bold: { style: "__" } },
+      newlineStrategy: "between_blocks",
+    });
+  console.log(String(prompt));
 });

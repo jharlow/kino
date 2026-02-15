@@ -100,44 +100,44 @@ describe("MarkdownMultilineBlock", () => {
   });
 
   describe("emptyIf()", () => {
-    it("should keep content when condition is truthy", () => {
+    it("should clear content when condition is truthy", () => {
       const block = new MarkdownMultilineBlock("text").emptyIf(true);
-      expect(block.render()).toBe("text");
+      expect(block.isEmpty).toBe(true);
     });
 
-    it("should clear content when condition is falsy (false)", () => {
+    it("should keep content when condition is falsy (false)", () => {
       const block = new MarkdownMultilineBlock("text").emptyIf(false);
-      expect(block.isEmpty).toBe(true);
+      expect(block.render()).toBe("text");
     });
 
-    it("should clear content when condition is falsy (0)", () => {
+    it("should keep content when condition is falsy (0)", () => {
       const block = new MarkdownMultilineBlock("text").emptyIf(0);
-      expect(block.isEmpty).toBe(true);
+      expect(block.render()).toBe("text");
     });
 
-    it("should clear content when condition is falsy (null)", () => {
+    it("should keep content when condition is falsy (null)", () => {
       const block = new MarkdownMultilineBlock("text").emptyIf(null);
-      expect(block.isEmpty).toBe(true);
+      expect(block.render()).toBe("text");
     });
 
-    it("should clear content when condition is falsy (undefined)", () => {
+    it("should keep content when condition is falsy (undefined)", () => {
       const block = new MarkdownMultilineBlock("text").emptyIf(undefined);
-      expect(block.isEmpty).toBe(true);
+      expect(block.render()).toBe("text");
     });
 
-    it("should clear content when condition is falsy (empty string)", () => {
+    it("should keep content when condition is falsy (empty string)", () => {
       const block = new MarkdownMultilineBlock("text").emptyIf("");
+      expect(block.render()).toBe("text");
+    });
+
+    it("should clear content when condition is truthy (1)", () => {
+      const block = new MarkdownMultilineBlock("text").emptyIf(1);
       expect(block.isEmpty).toBe(true);
     });
 
-    it("should keep content when condition is truthy (1)", () => {
-      const block = new MarkdownMultilineBlock("text").emptyIf(1);
-      expect(block.render()).toBe("text");
-    });
-
-    it("should keep content when condition is truthy (non-empty string)", () => {
+    it("should clear content when condition is truthy (non-empty string)", () => {
       const block = new MarkdownMultilineBlock("text").emptyIf("yes");
-      expect(block.render()).toBe("text");
+      expect(block.isEmpty).toBe(true);
     });
 
     it("should return this for chaining", () => {
@@ -424,7 +424,7 @@ describe("MarkdownMultilineBlock", () => {
     });
 
     it("should reflect changes after emptyIf clears", () => {
-      const block = new MarkdownMultilineBlock("a", "b").emptyIf(false);
+      const block = new MarkdownMultilineBlock("a", "b").emptyIf(true);
       expect(block.$lines).toEqual([]);
     });
 
@@ -461,7 +461,7 @@ describe("MarkdownMultilineBlock", () => {
     });
 
     it("should support emptyIf on section blocks", () => {
-      expect(b.sec("text").emptyIf(false).isEmpty).toBe(true);
+      expect(b.sec("text").emptyIf(true).isEmpty).toBe(true);
     });
 
     it("should support defaultIfEmpty on section blocks", () => {

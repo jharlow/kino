@@ -156,12 +156,12 @@ describe("MarkdownDocument", () => {
     expect(+b.doc("one", "two", "three")).toBe(3);
   });
 
-  it("should keep content when emptyIf condition is truthy", () => {
-    expect(String(b.doc("text").emptyIf(true))).toBe("text");
+  it("should clear content when emptyIf condition is truthy", () => {
+    expect(b.doc("text").emptyIf(true).isEmpty).toBe(true);
   });
 
-  it("should clear content when emptyIf condition is falsy", () => {
-    expect(b.doc("text").emptyIf(false).isEmpty).toBe(true);
+  it("should keep content when emptyIf condition is falsy", () => {
+    expect(String(b.doc("text").emptyIf(false))).toBe("text");
   });
 
   it("should set default content when empty via defaultIfEmpty()", () => {
