@@ -2,6 +2,7 @@ import {
   BlockMetadataTags,
   OptionalRenderingOptions,
 } from "../primitives/markdown-block";
+import { MarkdownInlineBlock } from "../primitives/markdown-inline-block";
 import {
   MarkdownLineBlock,
   MarkdownLineBlockContent,
@@ -69,3 +70,5 @@ export const heading = (
 };
 export const head = heading;
 export const h = heading;
+
+MarkdownInlineBlock._register("heading", MarkdownHeadingBlock);

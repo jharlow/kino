@@ -38,10 +38,97 @@ import { orderedListItem } from "./blocks/standard/markdown-ordered-list-item-bl
 import { p, para, paragraph } from "./blocks/standard/markdown-paragraph-block";
 import { unorderedList } from "./blocks/standard/markdown-unordered-list-block";
 import { unorderedListItem } from "./blocks/standard/markdown-unordered-list-item-block";
-import { d, doc, document as document_ } from "./blocks/utilities/markdown-document-block";
+import {
+  d,
+  doc,
+  document as document_,
+} from "./blocks/utilities/markdown-document-block";
 import { s, sec, section } from "./blocks/utilities/markdown-section-block";
 import { parse } from "./parsing/markdown-block-parser";
 import { markdown, md } from "./parsing/markdown-literal";
+
+// Re-export all types and classes
+
+// Primitives
+export { MarkdownBlock } from "./blocks/primitives/markdown-block";
+export type {
+  EnforceStylesOptions,
+  EnforceIndentationOptions,
+  NewlineStrategy,
+  RenderingOptions,
+  OptionalRenderingOptions,
+  BlockMetadataTags,
+} from "./blocks/primitives/markdown-block";
+export { MarkdownBlockInspector } from "./blocks/primitives/markdown-block-inspector";
+export { MarkdownInlineBlock } from "./blocks/primitives/markdown-inline-block";
+export type { MarkdownInlineBlockContent } from "./blocks/primitives/markdown-inline-block";
+export { MarkdownLineBlock } from "./blocks/primitives/markdown-line-block";
+export type { MarkdownLineBlockContent } from "./blocks/primitives/markdown-line-block";
+export { MarkdownMultilineBlock } from "./blocks/primitives/markdown-multiline-block";
+export type {
+  MarkdownMultilineBlockOptions,
+  MarkdownMultilineBlockContent,
+} from "./blocks/primitives/markdown-multiline-block";
+export type { StringReadable } from "./blocks/primitives/string-readable";
+export type {
+  PrimitiveValue,
+  BooleanCoercibleValue,
+} from "./blocks/primitives/values";
+
+// Standard blocks
+export { MarkdownBlockquoteBlock } from "./blocks/standard/markdown-blockquote-block";
+export { MarkdownBoldBlock } from "./blocks/standard/markdown-bold-block";
+export type { MarkdownBoldStyle } from "./blocks/standard/markdown-bold-block";
+export { MarkdownCodeBlock } from "./blocks/standard/markdown-code-block";
+export type { MarkdownCodeBlockLanguage } from "./blocks/standard/markdown-code-block";
+export { MarkdownHeadingBlock } from "./blocks/standard/markdown-heading-block";
+export type {
+  MarkdownHeadingLevel,
+  MarkdownHeadingLevelOptions,
+} from "./blocks/standard/markdown-heading-block";
+export { MarkdownHorizontalRuleBlock } from "./blocks/standard/markdown-horizontal-rule-block";
+export type { MarkdownHorizontalRuleStyle } from "./blocks/standard/markdown-horizontal-rule-block";
+export { MarkdownImageBlock } from "./blocks/standard/markdown-image-block";
+export { MarkdownItalicBlock } from "./blocks/standard/markdown-italic-block";
+export type { MarkdownItalicStyle } from "./blocks/standard/markdown-italic-block";
+export { MarkdownLineBreakBlock } from "./blocks/standard/markdown-line-break-block";
+export { MarkdownLinkBlock } from "./blocks/standard/markdown-link-block";
+export { MarkdownListBlock } from "./blocks/standard/markdown-list-block";
+export { MarkdownOrderedListBlock } from "./blocks/standard/markdown-ordered-list-block";
+export { MarkdownOrderedListItemBlock } from "./blocks/standard/markdown-ordered-list-item-block";
+export { MarkdownParagraphBlock } from "./blocks/standard/markdown-paragraph-block";
+export { MarkdownUnorderedListBlock } from "./blocks/standard/markdown-unordered-list-block";
+export { MarkdownUnorderedListItemBlock } from "./blocks/standard/markdown-unordered-list-item-block";
+export type { MarkdownUnorderedListItemStyle } from "./blocks/standard/markdown-unordered-list-item-block";
+
+// Extended blocks
+export { MarkdownEmojiBlock } from "./blocks/extended/markdown-emoji-block";
+export type { EmojiShortname } from "./blocks/extended/markdown-emoji-block";
+export { MarkdownFootnoteBlock } from "./blocks/extended/markdown-footnote-block";
+export { MarkdownHighlightBlock } from "./blocks/extended/markdown-highlight-block";
+export { MarkdownStrikethroughBlock } from "./blocks/extended/markdown-strikethrough-block";
+export { MarkdownSubscriptBlock } from "./blocks/extended/markdown-subscript-block";
+export { MarkdownSuperscriptBlock } from "./blocks/extended/markdown-superscript-block";
+export { MarkdownTableBlock } from "./blocks/extended/markdown-table-block";
+export type {
+  MarkdownTableAlignStyle,
+  MarkdownTableMaxWidth,
+  MarkdownTableBlockContent,
+  MarkdownTableColumn,
+  ColumnsDefinition,
+  MarkdownTableRow,
+} from "./blocks/extended/markdown-table-block";
+export { MarkdownTaskItemBlock } from "./blocks/extended/markdown-task-item-block";
+export type { MarkdownTaskItemBlockStyle } from "./blocks/extended/markdown-task-item-block";
+export { MarkdownTaskListBlock } from "./blocks/extended/markdown-task-list-block";
+
+// Utilities
+export { MarkdownDocument } from "./blocks/utilities/markdown-document-block";
+export { MarkdownSectionBlock } from "./blocks/utilities/markdown-section-block";
+
+// Parsing
+export { MarkdownBlockParser } from "./parsing/markdown-block-parser";
+export { MarkdownLiteral } from "./parsing/markdown-literal";
 
 const list = {
   unordered: unorderedList,

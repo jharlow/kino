@@ -1,6 +1,12 @@
-import type { MarkdownBoldBlock } from "../standard/markdown-bold-block";
+import type {
+  MarkdownBoldBlock,
+  MarkdownBoldStyle,
+} from "../standard/markdown-bold-block";
 import type { MarkdownImageBlock } from "../standard/markdown-image-block";
-import type { MarkdownItalicBlock } from "../standard/markdown-italic-block";
+import type {
+  MarkdownItalicBlock,
+  MarkdownItalicStyle,
+} from "../standard/markdown-italic-block";
 import type { MarkdownLinkBlock } from "../standard/markdown-link-block";
 import type { MarkdownHighlightBlock } from "../extended/markdown-highlight-block";
 import type { MarkdownStrikethroughBlock } from "../extended/markdown-strikethrough-block";
@@ -8,19 +14,24 @@ import type { MarkdownSubscriptBlock } from "../extended/markdown-subscript-bloc
 import type { MarkdownSuperscriptBlock } from "../extended/markdown-superscript-block";
 import { MarkdownBlock, OptionalRenderingOptions } from "./markdown-block";
 import { BooleanCoercibleValue, PrimitiveValue } from "./values";
+import {
+  MarkdownHeadingBlock,
+  MarkdownHeadingLevel,
+} from "../standard/markdown-heading-block";
+import { MarkdownBlockquoteBlock } from "../standard/markdown-blockquote-block";
 
 export type MarkdownInlineBlockContent = PrimitiveValue | MarkdownInlineBlock;
 
 export class MarkdownInlineBlock extends MarkdownBlock {
   public $content: Array<MarkdownInlineBlockContent> = [];
 
-  static _factories = new Map<string, new (...args: any[]) => MarkdownInlineBlock>();
+  static _factories = new Map<string, new (...args: any[]) => MarkdownBlock>();
 
-  static _register(name: string, ctor: new (...args: any[]) => MarkdownInlineBlock) {
+  static _register(name: string, ctor: new (...args: any[]) => MarkdownBlock) {
     MarkdownInlineBlock._factories.set(name, ctor);
   }
 
-  private _create(name: string, ...args: any[]): MarkdownInlineBlock {
+  private _create(name: string, ...args: any[]): MarkdownBlock {
     const Ctor = MarkdownInlineBlock._factories.get(name);
     if (!Ctor) throw new Error(`Block type '${name}' not registered`);
     return new Ctor(...args);
@@ -72,24 +83,28 @@ export class MarkdownInlineBlock extends MarkdownBlock {
     );
   }
 
-  public bold(): MarkdownBoldBlock {
-    return this._create("bold", this) as unknown as MarkdownBoldBlock;
+  public bold(style?: MarkdownBoldStyle): MarkdownBoldBlock {
+    const block = this._create("bold", this) as MarkdownBoldBlock;
+    if (style) block.style(style);
+    return block;
   }
 
-  public b(): MarkdownBoldBlock {
-    return this.bold();
+  public b(style?: MarkdownBoldStyle): MarkdownBoldBlock {
+    return this.bold(style);
   }
 
-  public italic(): MarkdownItalicBlock {
-    return this._create("italic", this) as unknown as MarkdownItalicBlock;
+  public italic(style?: MarkdownItalicStyle): MarkdownItalicBlock {
+    const block = this._create("italic", this) as MarkdownItalicBlock;
+    if (style) block.style(style);
+    return block;
   }
 
-  public i(): MarkdownItalicBlock {
-    return this.italic();
+  public i(style?: MarkdownItalicStyle): MarkdownItalicBlock {
+    return this.italic(style);
   }
 
   public strikethrough(): MarkdownStrikethroughBlock {
-    return this._create("strikethrough", this) as unknown as MarkdownStrikethroughBlock;
+    return this._create("strikethrough", this) as MarkdownStrikethroughBlock;
   }
 
   public st(): MarkdownStrikethroughBlock {
@@ -97,7 +112,7 @@ export class MarkdownInlineBlock extends MarkdownBlock {
   }
 
   public highlight(): MarkdownHighlightBlock {
-    return this._create("highlight", this) as unknown as MarkdownHighlightBlock;
+    return this._create("highlight", this) as MarkdownHighlightBlock;
   }
 
   public hl(): MarkdownHighlightBlock {
@@ -105,7 +120,7 @@ export class MarkdownInlineBlock extends MarkdownBlock {
   }
 
   public subscript(): MarkdownSubscriptBlock {
-    return this._create("subscript") as unknown as MarkdownSubscriptBlock;
+    return this._create("subscript") as MarkdownSubscriptBlock;
   }
 
   public sub(): MarkdownSubscriptBlock {
@@ -113,7 +128,7 @@ export class MarkdownInlineBlock extends MarkdownBlock {
   }
 
   public superscript(): MarkdownSuperscriptBlock {
-    return this._create("superscript", this) as unknown as MarkdownSuperscriptBlock;
+    return this._create("superscript", this) as MarkdownSuperscriptBlock;
   }
 
   public sup(): MarkdownSuperscriptBlock {
@@ -121,7 +136,7 @@ export class MarkdownInlineBlock extends MarkdownBlock {
   }
 
   public link(url: string): MarkdownLinkBlock {
-    return this._create("link", url, this) as unknown as MarkdownLinkBlock;
+    return this._create("link", url, this) as MarkdownLinkBlock;
   }
 
   public url(url: string): MarkdownLinkBlock {
@@ -129,11 +144,29 @@ export class MarkdownInlineBlock extends MarkdownBlock {
   }
 
   public image(src: string): MarkdownImageBlock {
-    return this._create("image", src, this) as unknown as MarkdownImageBlock;
+    return this._create("image", src, this) as MarkdownImageBlock;
   }
 
   public img(src: string): MarkdownImageBlock {
     return this.image(src);
+  }
+
+  public heading(level?: MarkdownHeadingLevel): MarkdownHeadingBlock {
+    const heading = this._create("heading", this) as MarkdownHeadingBlock;
+    if (level) heading.level(level);
+    return heading;
+  }
+
+  public h(level?: MarkdownHeadingLevel): MarkdownHeadingBlock {
+    return this.heading(level);
+  }
+
+  public blockquote(): MarkdownBlockquoteBlock {
+    return this._create("blockquote", this) as MarkdownBlockquoteBlock;
+  }
+
+  public bq(): MarkdownBlockquoteBlock {
+    return this.blockquote();
   }
 
   public render(options?: OptionalRenderingOptions): string | null {

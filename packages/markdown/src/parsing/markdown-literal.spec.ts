@@ -123,7 +123,7 @@ describe("MarkdownLiteral", () => {
     const literal = b.md`
     # Heading 1
     Hey, here's some Q's for you:
-    
+
     | Table | Header 2 |
     | --- | --- |
     | Row 1 | Row 2 |

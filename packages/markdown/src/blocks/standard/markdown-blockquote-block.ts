@@ -2,6 +2,7 @@ import {
   MarkdownBlock,
   OptionalRenderingOptions,
 } from "../primitives/markdown-block";
+import { MarkdownInlineBlock } from "../primitives/markdown-inline-block";
 import {
   MarkdownMultilineBlock,
   MarkdownMultilineBlockContent,
@@ -36,3 +37,5 @@ export const blockquote = (
 };
 export const block = blockquote;
 export const bq = blockquote;
+
+MarkdownInlineBlock._register("blockquote", MarkdownBlockquoteBlock);
