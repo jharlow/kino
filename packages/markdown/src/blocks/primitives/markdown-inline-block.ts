@@ -13,12 +13,15 @@ import type { MarkdownStrikethroughBlock } from "../extended/markdown-strikethro
 import type { MarkdownSubscriptBlock } from "../extended/markdown-subscript-block";
 import type { MarkdownSuperscriptBlock } from "../extended/markdown-superscript-block";
 import { MarkdownBlock, OptionalRenderingOptions } from "./markdown-block";
-import { BooleanCoercibleValue, PrimitiveValue } from "./values";
-import {
+import type { BooleanCoercibleValue, PrimitiveValue } from "./values";
+import type {
   MarkdownHeadingBlock,
   MarkdownHeadingLevel,
 } from "../standard/markdown-heading-block";
-import { MarkdownBlockquoteBlock } from "../standard/markdown-blockquote-block";
+import type { MarkdownBlockquoteBlock } from "../standard/markdown-blockquote-block";
+import type { MarkdownCommentBlock } from "../hacks/markdown-comment-block";
+import type { MarkdownUnderlineBlock } from "../hacks/markdown-underline-block";
+import type { MarkdownDetailsBlock } from "../hacks/markdown-details-block";
 
 export type MarkdownInlineBlockContent = PrimitiveValue | MarkdownInlineBlock;
 
@@ -157,6 +160,22 @@ export class MarkdownInlineBlock extends MarkdownBlock {
     return this.image(src);
   }
 
+  public underline(): MarkdownUnderlineBlock {
+    return this._create("underline", this) as MarkdownUnderlineBlock;
+  }
+
+  public u(): MarkdownUnderlineBlock {
+    return this.underline();
+  }
+
+  public comment(): MarkdownCommentBlock {
+    return this._create("comment", this) as MarkdownCommentBlock;
+  }
+
+  public hiddenFromHumans(): MarkdownCommentBlock {
+    return this.comment();
+  }
+
   public heading(level?: MarkdownHeadingLevel): MarkdownHeadingBlock {
     const heading = this._create("heading", this) as MarkdownHeadingBlock;
     if (level) heading.level(level);
@@ -173,6 +192,14 @@ export class MarkdownInlineBlock extends MarkdownBlock {
 
   public bq(): MarkdownBlockquoteBlock {
     return this.blockquote();
+  }
+
+  public details(
+    ...summary: Array<MarkdownInlineBlockContent>
+  ): MarkdownDetailsBlock {
+    const block = this._create("details", this) as MarkdownDetailsBlock;
+    if (summary.length > 0) block.summary(...summary);
+    return block;
   }
 
   public render(options?: OptionalRenderingOptions): string | null {

@@ -140,8 +140,8 @@ describe("MarkdownLiteral", () => {
     - [ ] Task item 1
     ## Header 2-2
     - [x] Task item 2-1
-    - [ ] Task item 2-2
-    - [x] Task item 2-3
+      - [ ] Task item 2-2
+      - [x] Task item 2-3
     ### Header 3-1
     - [ ] Task item 3-1
     - [x] Task item 3-2
@@ -149,6 +149,18 @@ describe("MarkdownLiteral", () => {
   
     - [ ] Task item 3-3
     `.parse();
-    console.log(literal.inspect());
+    console.log(String(literal));
+  });
+
+  it("should trim interpolated content correctly", () => {
+    const literal = b.md`
+    This is some text
+    And this is some more text
+    ${b.code("Hello world", "hi")}
+    ${b.list.ol("Item A", b.list.ul("Item B", "Item C"))}
+    `;
+    expect(String(literal)).toBe(
+      "This is some text\nAnd this is some more text\n```hi\nHello world\nhi\n```\n- Item A\n  - Item B\n  - Item C",
+    );
   });
 });

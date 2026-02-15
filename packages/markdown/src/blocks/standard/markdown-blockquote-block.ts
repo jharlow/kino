@@ -1,4 +1,5 @@
 import {
+  BlockMetadataTags,
   MarkdownBlock,
   OptionalRenderingOptions,
 } from "../primitives/markdown-block";
@@ -8,12 +9,27 @@ import {
   MarkdownMultilineBlockContent,
 } from "../primitives/markdown-multiline-block";
 
+export type GithubFlavoredBlockquoteAlert =
+  | "note"
+  | "tip"
+  | "important"
+  | "warning"
+  | "caution";
 export class MarkdownBlockquoteBlock extends MarkdownMultilineBlock<{
   excludeMultiline: false;
 }> {
+  public $alert: GithubFlavoredBlockquoteAlert | undefined = undefined;
+
+  public alert(alert: GithubFlavoredBlockquoteAlert | undefined): this {
+    this.$alert = alert;
+    return this;
+  }
+
   public render(options?: OptionalRenderingOptions): string | null {
     if (this.isEmpty) return null;
-    return this.$lines
+    const prefix = this.$alert ? `[!${this.$alert.toUpperCase()}]` : "";
+    const lines = this.$alert ? [prefix, ...this.$lines] : this.$lines;
+    return lines
       .filter((line) => this.shouldFilter(line, options))
       .flatMap((line) => {
         const content =
@@ -27,6 +43,12 @@ export class MarkdownBlockquoteBlock extends MarkdownMultilineBlock<{
       })
       .filter((line) => line !== null)
       .join("\n");
+  }
+
+  public getMetadataTags(): BlockMetadataTags {
+    return super
+      .getMetadataTags()
+      .concat(this.$alert ? [`alert=${this.$alert}`] : []);
   }
 }
 

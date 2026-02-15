@@ -1,26 +1,35 @@
 # `bamd` - block architected markdown documents
 
-Typescript-first Markdown designed for complex prompts
+Write context agnostic Markdown documents that look good wherever they're rendered
 
 ## What is `bamd`?
 
-By using a block architecture, `bamd` allows you to write complex Markdown documents that are context-agnostic and always render well. You're documents can easily interlace defaults, hide sections conditionally, and adjust automatically when injected into other `bamd` documents.
+By using a block architecture, `bamd` allows you to write complex Markdown documents that are context-agnostic and always render well. You're documents can easily interlace defaults, hide blocks conditionally, and adjust automatically when injected into other `bamd` documents.
 
 ```ts
+import * as b from "bamd";
+
 type User = { name?: string; email?: string; alternateEmail?: string };
 
 const createUserDoc = (user: User): MarkdownDocument => {
   const footnote = b
     .footnote(`Alternate email: ${user.alternateEmail}`)
     .if(user.alternateEmail);
-  return b.doc(
-    b.headline("User details"),
-    b.md`The users name is ${b.p(user.name).default("unknown")}`,
-    b.md`${b.b("The users email is")}: ${user.email}${footnote}`.if(user.email),
-  ).if(user.name || user.email);
+  return b
+    .doc(
+      b.headline("User details"),
+      b.md`The users name is ${b.p(user.name).default("unknown")}`,
+      b.md`${b.b("The users email is")}: ${user.email}${footnote}`.if(
+        user.email,
+      ),
+    )
+    .if(user.name || user.email);
 };
 
-const user: User = { email: "john.doe@example.com", alternateEmail: "john.doe@work.com" };
+const user: User = {
+  email: "john.doe@example.com",
+  alternateEmail: "john.doe@work.com",
+};
 const userDoc = createUserDoc(user);
 console.log(`${userDoc}`);
 // # User details
@@ -161,3 +170,13 @@ console.log(existingPrompt.inspect());
 ```
 
 `b.md` also improves on standard template literals by automatically removing empty lines at the top and bottom of your document, and removes leading whitespace from each line, unless it's a code block or indented list, meaning you can forget about causing indentation issues.
+
+## Features
+
+- Full support for standard, extended, and Github Flavored Markdown syntax specifications
+- Sub-document and section handling renders your blocks perfectly whereever they're injected
+- Concise chaining API that focuses on terseness
+- Simple return interfaces enable easy typing for document factories
+- Automatic parsing using `b.md``.parse()` enables quick adoption
+- Documents convert to strings automatically in `String()` and template literals
+- Zero dependencies and minimal bundle size

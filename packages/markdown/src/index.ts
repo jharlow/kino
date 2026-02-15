@@ -5,6 +5,7 @@ import {
   highlight,
   hl,
 } from "./blocks/extended/markdown-highlight-block";
+import { math } from "./blocks/extended/markdown-math-block";
 import {
   st,
   strike,
@@ -15,6 +16,12 @@ import { sup, superscript } from "./blocks/extended/markdown-superscript-block";
 import { t, table, tb } from "./blocks/extended/markdown-table-block";
 import { taskItem } from "./blocks/extended/markdown-task-item-block";
 import { tasksList } from "./blocks/extended/markdown-task-list-block";
+import {
+  comment,
+  hiddenFromHumans,
+} from "./blocks/hacks/markdown-comment-block";
+import { details } from "./blocks/hacks/markdown-details-block";
+import { u, underline } from "./blocks/hacks/markdown-underline-block";
 import { renderingOptions } from "./blocks/primitives/markdown-block";
 import { inspect } from "./blocks/primitives/markdown-block-inspector";
 import {
@@ -76,6 +83,7 @@ export type {
 
 // Standard blocks
 export { MarkdownBlockquoteBlock } from "./blocks/standard/markdown-blockquote-block";
+export type { GithubFlavoredBlockquoteAlert } from "./blocks/standard/markdown-blockquote-block";
 export { MarkdownBoldBlock } from "./blocks/standard/markdown-bold-block";
 export type { MarkdownBoldStyle } from "./blocks/standard/markdown-bold-block";
 export { MarkdownCodeBlock } from "./blocks/standard/markdown-code-block";
@@ -105,6 +113,7 @@ export { MarkdownEmojiBlock } from "./blocks/extended/markdown-emoji-block";
 export type { EmojiShortname } from "./blocks/extended/markdown-emoji-block";
 export { MarkdownFootnoteBlock } from "./blocks/extended/markdown-footnote-block";
 export { MarkdownHighlightBlock } from "./blocks/extended/markdown-highlight-block";
+export { MarkdownMathBlock } from "./blocks/extended/markdown-math-block";
 export { MarkdownStrikethroughBlock } from "./blocks/extended/markdown-strikethrough-block";
 export { MarkdownSubscriptBlock } from "./blocks/extended/markdown-subscript-block";
 export { MarkdownSuperscriptBlock } from "./blocks/extended/markdown-superscript-block";
@@ -120,6 +129,10 @@ export type {
 export { MarkdownTaskItemBlock } from "./blocks/extended/markdown-task-item-block";
 export type { MarkdownTaskItemBlockStyle } from "./blocks/extended/markdown-task-item-block";
 export { MarkdownTaskListBlock } from "./blocks/extended/markdown-task-list-block";
+
+// Hacks
+export { MarkdownCommentBlock } from "./blocks/hacks/markdown-comment-block";
+export { MarkdownUnderlineBlock } from "./blocks/hacks/markdown-underline-block";
 
 // Utilities
 export { MarkdownDocument } from "./blocks/utilities/markdown-document-block";
@@ -181,6 +194,8 @@ export const b = {
   url,
   image,
   img,
+  underline,
+  u,
   emoji,
   e,
   list,
@@ -189,6 +204,10 @@ export const b = {
   li: listItem,
   codeblock,
   code,
+  math,
+  comment,
+  hiddenFromHumans,
+  details,
   horizontalRule,
   hr,
   footnote,

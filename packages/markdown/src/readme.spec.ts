@@ -29,7 +29,10 @@ test("readme", () => {
   // console.log(b.b("hi").i("_").h(2).id("text").render());
 
   type User = { name?: string; email?: string; alternateEmail?: string };
-  const user: User = { email: "john.doe@example.com" };
+  const user: User = {
+    email: "john.doe@example.com",
+    alternateEmail: "john.doe@work.com",
+  };
 
   const createUserDoc = (user: User): MarkdownDocument => {
     const footnote = b

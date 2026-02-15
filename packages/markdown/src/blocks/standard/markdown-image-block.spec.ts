@@ -27,15 +27,13 @@ describe("MarkdownImageBlock", () => {
   });
 
   it("should be coercible via template literal", () => {
-    expect(`${b.image("photo.png", "A photo")}`).toBe(
-      "![A photo](photo.png)",
-    );
+    expect(`${b.image("photo.png", "A photo")}`).toBe("![A photo](photo.png)");
   });
 
   it("should accept nested inline content in alt", () => {
-    expect(
-      String(b.image("photo.png", "a ", b.bold("bold"), " caption")),
-    ).toBe("![a **bold** caption](photo.png)");
+    expect(String(b.image("photo.png", "a ", b.bold("bold"), " caption"))).toBe(
+      "![a **bold** caption](photo.png)",
+    );
   });
 
   it("should include src in metadata tags", () => {
@@ -68,9 +66,7 @@ describe("MarkdownImageBlock", () => {
   });
 
   it("should be creatable via b.img alias", () => {
-    expect(String(b.img("photo.png", "A photo"))).toBe(
-      "![A photo](photo.png)",
-    );
+    expect(String(b.img("photo.png", "A photo"))).toBe("![A photo](photo.png)");
   });
 
   it("should be chainable from paragraph via .image()", () => {
@@ -82,6 +78,18 @@ describe("MarkdownImageBlock", () => {
   it("should be chainable from paragraph via .img()", () => {
     expect(String(b.p("A photo").img("photo.png"))).toBe(
       "![A photo](photo.png)",
+    );
+  });
+
+  it("should render html if a caption is provided", () => {
+    expect(String(b.image("photo.png", "A photo").caption("A caption"))).toBe(
+      '<figure>\n  <img src="photo.png" alt="A photo">\n  <figcaption>A caption</figcaption>\n</figure>',
+    );
+  });
+
+  it("should not render alt tag if caption is provided but no alt text", () => {
+    expect(String(b.image("photo.png").caption("A caption"))).toBe(
+      '<figure>\n  <img src="photo.png">\n  <figcaption>A caption</figcaption>\n</figure>',
     );
   });
 });

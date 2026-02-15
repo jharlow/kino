@@ -424,6 +424,24 @@ describe("parse", () => {
       const doc = b.parse(input);
       expect(String(doc)).toBe(input);
     });
+
+    it("should be able to parse inline code blocks in middle of text", () => {
+      const input = "text `code` text";
+      const doc = b.parse(input);
+      expect(String(doc)).toBe(input);
+    });
+
+    it("should be able to parse multi line code blocks in middle of text", () => {
+      const input = "text ```code``` text";
+      const doc = b.parse(input);
+      expect(String(doc)).toBe(input);
+    });
+
+    it("should be able to parse code blocks with language in middle of text", () => {
+      const input = "text ```js\ncode\n``` text";
+      const doc = b.parse(input);
+      expect(String(doc)).toBe(input);
+    });
   });
 
   // ──────────────────────────────────────────────────────────────────────────

@@ -9,9 +9,7 @@ describe("MarkdownLinkBlock", () => {
   });
 
   it("should render an auto-link without label", () => {
-    expect(String(b.link("https://example.com"))).toBe(
-      "<https://example.com>",
-    );
+    expect(String(b.link("https://example.com"))).toBe("<https://example.com>");
   });
 
   it("should be coercible via String()", () => {
@@ -77,5 +75,25 @@ describe("MarkdownLinkBlock", () => {
     expect(String(b.p("click here").url("https://example.com"))).toBe(
       "[click here](https://example.com)",
     );
+  });
+
+  it("should render html when given a link target", () => {
+    expect(
+      String(b.link("https://example.com", "Example").target("_blank")),
+    ).toBe('<a href="https://example.com" target="_blank">Example</a>');
+  });
+
+  it("should use the link if a label is not provided", () => {
+    expect(String(b.link("https://example.com").target("_blank"))).toBe(
+      '<a href="https://example.com" target="_blank">https://example.com</a>',
+    );
+  });
+
+  it("should include target in metadata tags", () => {
+    const tags = b
+      .link("https://example.com", "Example")
+      .target("_blank")
+      .getMetadataTags();
+    expect(tags).toContain("target=_blank");
   });
 });

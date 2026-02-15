@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { b } from "../../index";
+import { b, MarkdownBlockquoteBlock, MarkdownHeadingBlock } from "../../index";
 import { MarkdownInlineBlock } from "./markdown-inline-block";
 import { MarkdownBoldBlock } from "../standard/markdown-bold-block";
 import { MarkdownItalicBlock } from "../standard/markdown-italic-block";
@@ -8,6 +8,8 @@ import { MarkdownImageBlock } from "../standard/markdown-image-block";
 import { MarkdownStrikethroughBlock } from "../extended/markdown-strikethrough-block";
 import { MarkdownHighlightBlock } from "../extended/markdown-highlight-block";
 import { MarkdownSuperscriptBlock } from "../extended/markdown-superscript-block";
+import { MarkdownCommentBlock } from "../hacks/markdown-comment-block";
+import { MarkdownUnderlineBlock } from "../hacks/markdown-underline-block";
 
 describe("MarkdownInlineBlock", () => {
   describe("constructor", () => {
@@ -336,6 +338,62 @@ describe("MarkdownInlineBlock", () => {
       const result = block.img("https://example.com/img.png");
       expect(result).toBeInstanceOf(MarkdownImageBlock);
       expect(result.render()).toBe("![alt text](https://example.com/img.png)");
+    });
+
+    it("underline() should return a MarkdownUnderlineBlock with this as content", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.underline();
+      expect(result).toBeInstanceOf(MarkdownUnderlineBlock);
+      expect(result.render()).toBe("<ins>text</ins>");
+    });
+
+    it("u() should return a MarkdownUnderlineBlock with this as content", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.u();
+      expect(result).toBeInstanceOf(MarkdownUnderlineBlock);
+      expect(result.render()).toBe("<ins>text</ins>");
+    });
+
+    it("heading() should return a MarkdownHeadingBlock with this as content", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.heading();
+      expect(result).toBeInstanceOf(MarkdownHeadingBlock);
+      expect(result.render()).toBe("# text");
+    });
+
+    it("h() should return a MarkdownHeadingBlock with this as content", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.h();
+      expect(result).toBeInstanceOf(MarkdownHeadingBlock);
+      expect(result.render()).toBe("# text");
+    });
+
+    it("blockquote() should return a MarkdownBlockquoteBlock with this as content", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.blockquote();
+      expect(result).toBeInstanceOf(MarkdownBlockquoteBlock);
+      expect(result.render()).toBe("> text");
+    });
+
+    it("bq() should return a MarkdownBlockquoteBlock with this as content", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.bq();
+      expect(result).toBeInstanceOf(MarkdownBlockquoteBlock);
+      expect(result.render()).toBe("> text");
+    });
+
+    it("hiddenFromHumans() should return a MarkdownCommentBlock with this as content", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.hiddenFromHumans();
+      expect(result).toBeInstanceOf(MarkdownCommentBlock);
+      expect(result.render()).toBe("[text]: #");
+    });
+
+    it("comment() should return a MarkdownCommentBlock with this as content", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.comment();
+      expect(result).toBeInstanceOf(MarkdownCommentBlock);
+      expect(result.render()).toBe("[text]: #");
     });
   });
 

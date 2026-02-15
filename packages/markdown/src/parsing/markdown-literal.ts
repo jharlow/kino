@@ -1,4 +1,7 @@
-import { BlockMetadataTags, OptionalRenderingOptions } from "../blocks/primitives/markdown-block";
+import {
+  BlockMetadataTags,
+  OptionalRenderingOptions,
+} from "../blocks/primitives/markdown-block";
 import {
   MarkdownInlineBlock,
   MarkdownInlineBlockContent,
@@ -37,6 +40,7 @@ export function markdown(
     parts.push(strings[i]);
     if (i < exprs.length) parts.push(exprs[i]);
   }
+  console.log("parts", parts);
   return new MarkdownLiteral(...(parts as Array<MarkdownInlineBlockContent>));
 }
 export const md = markdown;
