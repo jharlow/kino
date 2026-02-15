@@ -1,3 +1,6 @@
+import { BlockMetadataTags } from "../primitives/markdown-block";
+import { MarkdownInlineBlock } from "../primitives/markdown-inline-block";
+
 export const emojiShortnames = [
   "woman_woman_girl_girl",
   "woman_woman_girl_boy",
@@ -4034,3 +4037,25 @@ export const emojiShortnames = [
 ] as const;
 
 export type EmojiShortname = (typeof emojiShortnames)[number];
+
+export class MarkdownEmojiBlock extends MarkdownInlineBlock {
+  public $emoji: EmojiShortname;
+
+  constructor(emoji: EmojiShortname) {
+    super();
+    this.$emoji = emoji;
+  }
+
+  public render(): string | null {
+    return `:${this.$emoji}:`;
+  }
+
+  public getMetadataTags(): BlockMetadataTags {
+    return super.getMetadataTags().concat(`name=${this.$emoji}`);
+  }
+}
+
+export const emoji = (emoji: EmojiShortname): MarkdownEmojiBlock => {
+  return new MarkdownEmojiBlock(emoji);
+};
+export const e = emoji;
