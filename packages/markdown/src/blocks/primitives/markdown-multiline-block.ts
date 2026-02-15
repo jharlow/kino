@@ -32,9 +32,13 @@ export class MarkdownMultilineBlock<
   }
 
   public emptyIf(condition: BooleanCoercibleValue): this {
-    if (Boolean(condition)) return this;
+    if (!Boolean(condition)) return this;
     this.$lines = [];
     return this;
+  }
+
+  public if(condition: BooleanCoercibleValue): this {
+    return this.emptyIf(!condition);
   }
 
   public defaultIfEmpty(
@@ -43,6 +47,10 @@ export class MarkdownMultilineBlock<
     if (!this.isEmpty) return this;
     this.$lines = lines;
     return this;
+  }
+
+  public default(...lines: Array<MarkdownMultilineBlockContent<OPTS>>): this {
+    return this.defaultIfEmpty(...lines);
   }
 
   public set depth(value: number) {

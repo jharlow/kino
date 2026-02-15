@@ -12,15 +12,23 @@ export class MarkdownLineBlock extends MarkdownBlock {
   }
 
   public emptyIf(condition: BooleanCoercibleValue): this {
-    if (Boolean(condition)) return this;
+    if (!Boolean(condition)) return this;
     this.$line = [];
     return this;
+  }
+
+  public if(condition: BooleanCoercibleValue): this {
+    return this.emptyIf(!condition);
   }
 
   public defaultIfEmpty(...line: Array<MarkdownLineBlockContent>): this {
     if (!this.isEmpty) return this;
     this.$line = line;
     return this;
+  }
+
+  public default(...line: Array<MarkdownLineBlockContent>): this {
+    return this.defaultIfEmpty(...line);
   }
 
   public get isEmpty(): boolean {

@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { b } from "./index";
+import { b, MarkdownDocument } from "./index";
 
 test("readme", () => {
   const doc = b
@@ -22,4 +22,14 @@ test("readme", () => {
     .setRenderingOptions({ newlineStrategy: "between_blocks" });
   console.log(String(doc));
   console.log(b.b("hi").i("_").h(2).id("text").render());
+
+  type User = { name?: string; email?: string };
+  const createUserDoc = (user: User, short?: boolean): MarkdownDocument => {
+    return b.doc(
+      b.h("User details"),
+      b.p(b.b("The users name is"), user.name).emptyIf(!user.name),
+      b.p(b.b("The users email is"), user.email).emptyIf(!user.email),
+    );
+  };
+  console.log(String(createUserDoc({ name: "John Doe" })));
 });

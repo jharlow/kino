@@ -43,7 +43,7 @@ export class MarkdownInlineBlock extends MarkdownBlock {
   }
 
   public emptyIf(condition: BooleanCoercibleValue): this {
-    if (Boolean(condition)) return this;
+    if (!Boolean(condition)) return this;
     this.$content = [];
     return this;
   }
@@ -54,7 +54,7 @@ export class MarkdownInlineBlock extends MarkdownBlock {
    * @returns The block instance.
    */
   public if(condition: BooleanCoercibleValue): this {
-    return this.emptyIf(condition);
+    return this.emptyIf(!condition);
   }
 
   public defaultIfEmpty(...content: Array<MarkdownInlineBlockContent>): this {
