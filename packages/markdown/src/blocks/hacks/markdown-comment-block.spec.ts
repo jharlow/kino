@@ -28,9 +28,7 @@ describe("MarkdownCommentBlock", () => {
   });
 
   it("should render inline content within the comment", () => {
-    expect(String(b.comment("some ", b.p("inline")))).toBe(
-      "[some inline]: #",
-    );
+    expect(String(b.comment("some ", b.p("inline")))).toBe("[some inline]: #");
   });
 
   it("should be an instance of MarkdownCommentBlock", () => {

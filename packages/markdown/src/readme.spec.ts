@@ -29,10 +29,6 @@ test("readme", () => {
   // console.log(b.b("hi").i("_").h(2).id("text").render());
 
   type User = { name?: string; email?: string; alternateEmail?: string };
-  const user: User = {
-    email: "john.doe@example.com",
-    alternateEmail: "john.doe@work.com",
-  };
 
   const createUserDoc = (user: User): MarkdownDocument => {
     const footnote = b
@@ -40,17 +36,21 @@ test("readme", () => {
       .if(user.alternateEmail);
     return b
       .doc(
-        b.h("User details"),
-        b.md`The users name is ${b.p(user.name).default("unknown")}`,
-        b.md`${b.b("The users email is")}: ${user.email}${footnote}`.if(
+        b.heading("User details"),
+        b`The users name is ${b.p(user.name).default("unknown")}`,
+        b`${b.b("The users email is")}: ${user.email}${footnote}`.if(
           user.email,
         ),
       )
       .if(user.name || user.email);
   };
 
+  const user: User = {
+    email: "john.doe@example.com",
+    alternateEmail: "john.doe@work.com",
+  };
   const userDoc = createUserDoc(user);
-  // console.log(`${userDoc}`);
+  console.log(`${userDoc}`);
   // # User details
   // The users name is unknown
   // **The users email is**: john.doe@example.com[^1]
@@ -59,7 +59,7 @@ test("readme", () => {
 
   const prompt = b
     .doc(
-      b.h("Instructions"),
+      b.heading("Instructions"),
       b.p("Greet the user and introduce yourself as a helpful AI assistant."),
       userDoc,
       b.p("Once you have done this, call the `welcomeGiven` tool."),
@@ -68,5 +68,5 @@ test("readme", () => {
       enforce: { bold: { style: "__" } },
       newlineStrategy: "between_blocks",
     });
-  // console.log(String(prompt));
+  console.log(String(prompt));
 });

@@ -15,15 +15,11 @@ describe("MarkdownTaskItemBlock", () => {
   });
 
   it("should render with X style when set", () => {
-    expect(String(b.listItem.task(true, "item").style("X"))).toBe(
-      "- [X] item",
-    );
+    expect(String(b.listItem.task(true, "item").style("X"))).toBe("- [X] item");
   });
 
   it("should render with x style explicitly", () => {
-    expect(String(b.listItem.task(true, "item").style("x"))).toBe(
-      "- [x] item",
-    );
+    expect(String(b.listItem.task(true, "item").style("x"))).toBe("- [x] item");
   });
 
   it("should always render empty checkbox when unchecked regardless of style", () => {
@@ -102,9 +98,9 @@ describe("MarkdownTaskItemBlock", () => {
   });
 
   it("should accept inline blocks in content", () => {
-    expect(
-      String(b.listItem.task(true, "hello ", b.bold("world"))),
-    ).toBe("- [x] hello **world**");
+    expect(String(b.listItem.task(true, "hello ", b.bold("world")))).toBe(
+      "- [x] hello **world**",
+    );
   });
 
   it("should accept multiple inline blocks in content", () => {
@@ -116,15 +112,15 @@ describe("MarkdownTaskItemBlock", () => {
   });
 
   it("should include checked in metadata tags when checked", () => {
-    expect(
-      b.listItem.task(true, "item").getMetadataTags(),
-    ).toContain("checked");
+    expect(b.listItem.task(true, "item").getMetadataTags()).toContain(
+      "checked",
+    );
   });
 
   it("should include unchecked in metadata tags when unchecked", () => {
-    expect(
-      b.listItem.task(false, "item").getMetadataTags(),
-    ).toContain("unchecked");
+    expect(b.listItem.task(false, "item").getMetadataTags()).toContain(
+      "unchecked",
+    );
   });
 
   it("should include style in metadata tags when set", () => {

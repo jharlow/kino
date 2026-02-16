@@ -104,9 +104,7 @@ describe("MarkdownParagraphBlock", () => {
   });
 
   it("should accept nested inline blocks", () => {
-    expect(String(b.p("hello ", b.bold("world")))).toBe(
-      "hello **world**",
-    );
+    expect(String(b.p("hello ", b.bold("world")))).toBe("hello **world**");
   });
 
   it("should accept multiple nested inline blocks", () => {

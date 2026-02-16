@@ -48,9 +48,9 @@ describe("MarkdownOrderedListItemBlock", () => {
   });
 
   it("should accept nested inline blocks", () => {
-    expect(
-      String(b.listItem.ordered(1, "hello ", b.bold("world"))),
-    ).toBe("1. hello **world**");
+    expect(String(b.listItem.ordered(1, "hello ", b.bold("world")))).toBe(
+      "1. hello **world**",
+    );
   });
 
   it("should include index in metadata tags", () => {
@@ -60,9 +60,9 @@ describe("MarkdownOrderedListItemBlock", () => {
   });
 
   it("should reflect updated index in metadata tags", () => {
-    expect(
-      b.listItem.ordered(1, "item").index(7).getMetadataTags(),
-    ).toContain("index=7");
+    expect(b.listItem.ordered(1, "item").index(7).getMetadataTags()).toContain(
+      "index=7",
+    );
   });
 
   it("should return index as chainable", () => {

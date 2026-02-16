@@ -16,29 +16,19 @@ describe("MarkdownTableBlock", () => {
 
     it("should render a header-only table when no rows are provided", () => {
       const table = b.table({ name: "Name", age: "Age" });
-      expect(table.render()).toBe(
-        "| Name | Age |\n| ---- | --- |",
-      );
+      expect(table.render()).toBe("| Name | Age |\n| ---- | --- |");
     });
 
     it("should auto-expand column widths to widest content", () => {
-      const table = b.table(
-        { col: "X" },
-        { col: "longer content" },
-      );
+      const table = b.table({ col: "X" }, { col: "longer content" });
       expect(table.render()).toBe(
         "| X              |\n| -------------- |\n| longer content |",
       );
     });
 
     it("should pad separator dashes to match column width", () => {
-      const table = b.table(
-        { col: "Header" },
-        { col: "A" },
-      );
-      expect(table.render()).toBe(
-        "| Header |\n| ------ |\n| A      |",
-      );
+      const table = b.table({ col: "Header" }, { col: "A" });
+      expect(table.render()).toBe("| Header |\n| ------ |\n| A      |");
     });
   });
 
@@ -62,27 +52,21 @@ describe("MarkdownTableBlock", () => {
   describe("addRow / addRows", () => {
     it("should add a single row via addRow()", () => {
       const table = b.table({ name: "Name" }).addRow({ name: "Alice" });
-      expect(table.render()).toBe(
-        "| Name  |\n| ----- |\n| Alice |",
-      );
+      expect(table.render()).toBe("| Name  |\n| ----- |\n| Alice |");
     });
 
     it("should add multiple rows via addRow()", () => {
       const table = b
         .table({ name: "Name" })
         .addRow({ name: "Alice" }, { name: "Bob" });
-      expect(table.render()).toBe(
-        "| Name  |\n| ----- |\n| Alice |\n| Bob   |",
-      );
+      expect(table.render()).toBe("| Name  |\n| ----- |\n| Alice |\n| Bob   |");
     });
 
     it("should add rows via addRows()", () => {
       const table = b
         .table({ name: "Name" })
         .addRows({ name: "Alice" }, { name: "Bob" });
-      expect(table.render()).toBe(
-        "| Name  |\n| ----- |\n| Alice |\n| Bob   |",
-      );
+      expect(table.render()).toBe("| Name  |\n| ----- |\n| Alice |\n| Bob   |");
     });
 
     it("should be chainable", () => {
@@ -90,9 +74,7 @@ describe("MarkdownTableBlock", () => {
         .table({ name: "Name" })
         .addRow({ name: "Alice" })
         .addRow({ name: "Bob" });
-      expect(table.render()).toBe(
-        "| Name  |\n| ----- |\n| Alice |\n| Bob   |",
-      );
+      expect(table.render()).toBe("| Name  |\n| ----- |\n| Alice |\n| Bob   |");
     });
   });
 
@@ -102,9 +84,7 @@ describe("MarkdownTableBlock", () => {
         { col: { name: "Col", align: "left" } },
         { col: "data" },
       );
-      expect(table.render()).toBe(
-        "| Col  |\n| :--- |\n| data |",
-      );
+      expect(table.render()).toBe("| Col  |\n| :--- |\n| data |");
     });
 
     it("should render right alignment marker", () => {
@@ -112,9 +92,7 @@ describe("MarkdownTableBlock", () => {
         { col: { name: "Col", align: "right" } },
         { col: "data" },
       );
-      expect(table.render()).toBe(
-        "| Col  |\n| ---: |\n| data |",
-      );
+      expect(table.render()).toBe("| Col  |\n| ---: |\n| data |");
     });
 
     it("should render center alignment marker", () => {
@@ -128,13 +106,8 @@ describe("MarkdownTableBlock", () => {
     });
 
     it("should render no alignment marker when undefined", () => {
-      const table = b.table(
-        { col: { name: "Col" } },
-        { col: "data" },
-      );
-      expect(table.render()).toBe(
-        "| Col  |\n| ---- |\n| data |",
-      );
+      const table = b.table({ col: { name: "Col" } }, { col: "data" });
+      expect(table.render()).toBe("| Col  |\n| ---- |\n| data |");
     });
 
     it("should space-pad alignment markers within the column", () => {
@@ -158,18 +131,14 @@ describe("MarkdownTableBlock", () => {
       const table = b
         .table({ col: "Col" }, { col: "data" })
         .setColumnAlign("col", "right");
-      expect(table.render()).toBe(
-        "| Col  |\n| ---: |\n| data |",
-      );
+      expect(table.render()).toBe("| Col  |\n| ---: |\n| data |");
     });
 
     it("should handle setting alignment on non-existent column gracefully", () => {
       const table = b
         .table({ col: "Col" }, { col: "data" })
         .setColumnAlign("nonexistent" as any, "left");
-      expect(table.render()).toBe(
-        "| Col  |\n| ---- |\n| data |",
-      );
+      expect(table.render()).toBe("| Col  |\n| ---- |\n| data |");
     });
   });
 
@@ -184,10 +153,7 @@ describe("MarkdownTableBlock", () => {
 
     it("should be overridden by per-column alignment", () => {
       const table = b
-        .table(
-          { a: { name: "A", align: "left" }, b: "B" },
-          { a: "1", b: "2" },
-        )
+        .table({ a: { name: "A", align: "left" }, b: "B" }, { a: "1", b: "2" })
         .style("right");
       const lines = table.render()!.split("\n");
       const parts = lines[1].split("|").filter((s) => s.trim() !== "");
@@ -212,9 +178,7 @@ describe("MarkdownTableBlock", () => {
     });
 
     it("should override default style set via style()", () => {
-      const table = b
-        .table({ col: "Col" }, { col: "data" })
-        .style("left");
+      const table = b.table({ col: "Col" }, { col: "data" }).style("left");
       const result = table.render({ enforce: { table: { align: "right" } } });
       expect(result).toContain("---:");
       expect(result).not.toContain(":---");
@@ -223,26 +187,17 @@ describe("MarkdownTableBlock", () => {
 
   describe("cell content handling", () => {
     it("should escape pipe characters in cells", () => {
-      const table = b.table(
-        { col: "Col" },
-        { col: "a | b" },
-      );
+      const table = b.table({ col: "Col" }, { col: "a | b" });
       expect(table.render()).toContain("a \\| b");
     });
 
     it("should convert newlines to <br> in cells", () => {
-      const table = b.table(
-        { col: "Col" },
-        { col: "line1\nline2" },
-      );
+      const table = b.table({ col: "Col" }, { col: "line1\nline2" });
       expect(table.render()).toContain("line1<br>line2");
     });
 
     it("should render disallowed heading block as empty cell", () => {
-      const table = b.table(
-        { col: "Col" },
-        { col: b.h("Title") as any },
-      );
+      const table = b.table({ col: "Col" }, { col: b.h("Title") as any });
       const lines = table.render()!.split("\n");
       const dataRow = lines[2];
       expect(dataRow).toMatch(/\|\s+\|/);
@@ -269,10 +224,7 @@ describe("MarkdownTableBlock", () => {
     });
 
     it("should render disallowed horizontal rule as empty cell", () => {
-      const table = b.table(
-        { col: "Col" },
-        { col: b.hr() as any },
-      );
+      const table = b.table({ col: "Col" }, { col: b.hr() as any });
       const lines = table.render()!.split("\n");
       const dataRow = lines[2];
       expect(dataRow).toMatch(/\|\s+\|/);
@@ -289,10 +241,7 @@ describe("MarkdownTableBlock", () => {
     });
 
     it("should render inline markdown blocks in cells", () => {
-      const table = b.table(
-        { col: "Col" },
-        { col: b.bold("strong") },
-      );
+      const table = b.table({ col: "Col" }, { col: b.bold("strong") });
       expect(table.render()).toContain("**strong**");
     });
   });
@@ -352,31 +301,19 @@ describe("MarkdownTableBlock", () => {
       const table = b
         .table({ col: "Col" }, { col: "data" })
         .setColumnMaxWidth("nonexistent" as any, 5);
-      expect(table.render()).toBe(
-        "| Col  |\n| ---- |\n| data |",
-      );
+      expect(table.render()).toBe("| Col  |\n| ---- |\n| data |");
     });
   });
 
   describe("coercion", () => {
     it("should be coercible via String()", () => {
-      const table = b.table(
-        { name: "Name" },
-        { name: "Alice" },
-      );
-      expect(String(table)).toBe(
-        "| Name  |\n| ----- |\n| Alice |",
-      );
+      const table = b.table({ name: "Name" }, { name: "Alice" });
+      expect(String(table)).toBe("| Name  |\n| ----- |\n| Alice |");
     });
 
     it("should be coercible via template literal", () => {
-      const table = b.table(
-        { name: "Name" },
-        { name: "Alice" },
-      );
-      expect(`${table}`).toBe(
-        "| Name  |\n| ----- |\n| Alice |",
-      );
+      const table = b.table({ name: "Name" }, { name: "Alice" });
+      expect(`${table}`).toBe("| Name  |\n| ----- |\n| Alice |");
     });
   });
 
@@ -392,11 +329,7 @@ describe("MarkdownTableBlock", () => {
     });
 
     it("should include rows tag when rows exist", () => {
-      const table = b.table(
-        { a: "A" },
-        { a: "1" },
-        { a: "2" },
-      );
+      const table = b.table({ a: "A" }, { a: "1" }, { a: "2" });
       expect(table.getMetadataTags()).toContain("rows=2");
     });
 
@@ -457,9 +390,7 @@ describe("MarkdownTableBlock", () => {
       );
       const result = table.render()!;
       const lines = result.split("\n");
-      const separatorParts = lines[1]
-        .split("|")
-        .filter((s) => s.trim() !== "");
+      const separatorParts = lines[1].split("|").filter((s) => s.trim() !== "");
       expect(separatorParts[0].trim()).toMatch(/^:[-]+$/);
       expect(separatorParts[1].trim()).toMatch(/^:[-]+:$/);
       expect(separatorParts[2].trim()).toMatch(/^[-]+:$/);
@@ -468,10 +399,7 @@ describe("MarkdownTableBlock", () => {
 
   describe("column definition via object", () => {
     it("should accept object column definitions with name only", () => {
-      const table = b.table(
-        { col: { name: "Column" } },
-        { col: "value" },
-      );
+      const table = b.table({ col: { name: "Column" } }, { col: "value" });
       expect(table.render()).toContain("Column");
     });
 

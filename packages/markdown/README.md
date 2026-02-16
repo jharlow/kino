@@ -17,11 +17,9 @@ const createUserDoc = (user: User): MarkdownDocument => {
     .if(user.alternateEmail);
   return b
     .doc(
-      b.headline("User details"),
-      b.md`The users name is ${b.p(user.name).default("unknown")}`,
-      b.md`${b.b("The users email is")}: ${user.email}${footnote}`.if(
-        user.email,
-      ),
+      b.heading("User details"),
+      b`The users name is ${b.p(user.name).default("unknown")}`,
+      b`${b.b("The users email is")}: ${user.email}${footnote}`.if(user.email),
     )
     .if(user.name || user.email);
 };
@@ -40,7 +38,7 @@ console.log(`${userDoc}`);
 
 const prompt = b
   .doc(
-    b.headline("Instructions"),
+    b.heading("Instructions"),
     b.p("Greet the user and introduce yourself as a helpful AI assistant."),
     userDoc,
     b.p("Once you have done this, call the `welcomeGiven` tool."),
@@ -116,11 +114,11 @@ console.log(String(createPrDoc({ ...pr, approved: false })));
 
 Because `bamd` allows all primitive data types as inputs, and it's resulting documents are swappable to anywhere you currently use `string`s, it's very easy to incrementally adopt `bamd`.
 
-For near instant adoption anywhere you use template literals today, just prefix them with `b.md`. By default, `b.md` detects injected blocks and encapsulates them (see the first example above), but if you would prefer to write markdown as you normally would, you can combine `b.md` with the `.parse()` method.
+For near instant adoption anywhere you use template literals today, just prefix them with `b`. By default, `b.md` detects injected blocks and encapsulates them (see the first example above), but if you would prefer to write markdown as you normally would, you can combine `b` with the `.parse()` method.
 
 ```ts
-//                    👇 add `b.md` to existing template literals
-const existingPrompt = b.md` 
+//                    👇 add `b` to existing template literals
+const existingPrompt = b` 
   # About our company
   We are a company that makes widgets.
 
@@ -169,7 +167,7 @@ console.log(existingPrompt.inspect());
 //                 └── "jane.smith@example.com"
 ```
 
-`b.md` also improves on standard template literals by automatically removing empty lines at the top and bottom of your document, and removes leading whitespace from each line, unless it's a code block or indented list, meaning you can forget about causing indentation issues.
+`b` also improves on standard template literals by automatically removing empty lines at the top and bottom of your document, and removes leading whitespace from each line, unless it's a code block or indented list, meaning you can forget about causing indentation issues.
 
 ## Features
 
@@ -177,6 +175,6 @@ console.log(existingPrompt.inspect());
 - Sub-document and section handling renders your blocks perfectly whereever they're injected
 - Concise chaining API that focuses on terseness
 - Simple return interfaces enable easy typing for document factories
-- Automatic parsing using `b.md``.parse()` enables quick adoption
+- Automatic parsing using `b``.parse()` enables quick adoption
 - Documents convert to strings automatically in `String()` and template literals
 - Zero dependencies and minimal bundle size

@@ -29,9 +29,7 @@ describe("MarkdownHeadingBlock", () => {
   });
 
   it("should set identifier via identifier()", () => {
-    expect(String(b.h("Title").identifier("my-id"))).toBe(
-      "# Title {#my-id}",
-    );
+    expect(String(b.h("Title").identifier("my-id"))).toBe("# Title {#my-id}");
   });
 
   it("should set identifier via id() alias", () => {
@@ -39,9 +37,7 @@ describe("MarkdownHeadingBlock", () => {
   });
 
   it("should combine level and identifier", () => {
-    expect(String(b.h("Title").level(2).id("sec"))).toBe(
-      "## Title {#sec}",
-    );
+    expect(String(b.h("Title").level(2).id("sec"))).toBe("## Title {#sec}");
   });
 
   it("should only set identifier once (first wins)", () => {
@@ -70,9 +66,7 @@ describe("MarkdownHeadingBlock", () => {
   });
 
   it("should accept inline blocks as content", () => {
-    expect(String(b.h("Hello ", b.bold("world")))).toBe(
-      "# Hello **world**",
-    );
+    expect(String(b.h("Hello ", b.bold("world")))).toBe("# Hello **world**");
   });
 
   it("should include metadata tags", () => {

@@ -12,15 +12,15 @@ describe("RenderingOptions", () => {
     });
 
     it("should filter null from line blocks by default", () => {
-      expect(
-        b.li.unordered("hello", null, "world").render(),
-      ).toBe("- helloworld");
+      expect(b.li.unordered("hello", null, "world").render()).toBe(
+        "- helloworld",
+      );
     });
 
     it("should filter undefined from line blocks by default", () => {
-      expect(
-        b.li.unordered("hello", undefined, "world").render(),
-      ).toBe("- helloworld");
+      expect(b.li.unordered("hello", undefined, "world").render()).toBe(
+        "- helloworld",
+      );
     });
 
     it("should filter null from multiline blocks by default", () => {
@@ -28,15 +28,13 @@ describe("RenderingOptions", () => {
     });
 
     it("should filter undefined from multiline blocks by default", () => {
-      expect(b.doc("hello", undefined, "world").render()).toBe(
-        "hello\nworld",
-      );
+      expect(b.doc("hello", undefined, "world").render()).toBe("hello\nworld");
     });
 
     it("should render null as 'null' in inline blocks when renderNullish is true", () => {
-      expect(
-        b.p("hello", null, "world").render({ renderNullish: true }),
-      ).toBe("hellonullworld");
+      expect(b.p("hello", null, "world").render({ renderNullish: true })).toBe(
+        "hellonullworld",
+      );
     });
 
     it("should render undefined as 'undefined' in inline blocks when renderNullish is true", () => {
@@ -64,15 +62,15 @@ describe("RenderingOptions", () => {
     });
 
     it("should join inline content with a custom separator", () => {
-      expect(
-        b.p("hello", "world").render({ lineJoinString: " " }),
-      ).toBe("hello world");
+      expect(b.p("hello", "world").render({ lineJoinString: " " })).toBe(
+        "hello world",
+      );
     });
 
     it("should join inline content with a comma separator", () => {
-      expect(
-        b.p("one", "two", "three").render({ lineJoinString: ", " }),
-      ).toBe("one, two, three");
+      expect(b.p("one", "two", "three").render({ lineJoinString: ", " })).toBe(
+        "one, two, three",
+      );
     });
 
     it("should join line block content with a custom separator", () => {
@@ -103,7 +101,10 @@ describe("RenderingOptions", () => {
 
     it("should override per-block bold style", () => {
       expect(
-        b.bold("text").style("__").render({ enforce: { bold: { style: "**" } } }),
+        b
+          .bold("text")
+          .style("__")
+          .render({ enforce: { bold: { style: "**" } } }),
       ).toBe("**text**");
     });
 
@@ -127,7 +128,10 @@ describe("RenderingOptions", () => {
 
     it("should override per-block italic style", () => {
       expect(
-        b.italic("text").style("_").render({ enforce: { italic: { style: "*" } } }),
+        b
+          .italic("text")
+          .style("_")
+          .render({ enforce: { italic: { style: "*" } } }),
       ).toBe("*text*");
     });
 
@@ -190,7 +194,10 @@ describe("RenderingOptions", () => {
 
     it("should override per-block style", () => {
       expect(
-        b.hr().style("*").render({ enforce: { horizontalRule: { style: "_" } } }),
+        b
+          .hr()
+          .style("*")
+          .render({ enforce: { horizontalRule: { style: "_" } } }),
       ).toBe("\n___\n");
     });
 
@@ -200,7 +207,10 @@ describe("RenderingOptions", () => {
 
     it("should respect count when enforcing style", () => {
       expect(
-        b.hr().count(5).render({ enforce: { horizontalRule: { style: "*" } } }),
+        b
+          .hr()
+          .count(5)
+          .render({ enforce: { horizontalRule: { style: "*" } } }),
       ).toBe("\n*****\n");
     });
   });
@@ -285,9 +295,7 @@ describe("RenderingOptions", () => {
     });
 
     it("should override table-level style", () => {
-      const tbl = b
-        .table({ a: "A", b: "B" }, { a: "1", b: "2" })
-        .style("left");
+      const tbl = b.table({ a: "A", b: "B" }, { a: "1", b: "2" }).style("left");
       const result = tbl.render({
         enforce: { table: { align: "center" } },
       });
@@ -297,10 +305,7 @@ describe("RenderingOptions", () => {
 
   describe("enforce.list", () => {
     it("should override default list indentation", () => {
-      const list = b.list.unordered(
-        "item 1",
-        b.list.unordered("nested"),
-      );
+      const list = b.list.unordered("item 1", b.list.unordered("nested"));
       const result = list.render({ enforce: { list: { indent: 4 } } });
       expect(result).toBe("- item 1\n    - nested");
     });
@@ -314,10 +319,7 @@ describe("RenderingOptions", () => {
     });
 
     it("should apply to ordered lists", () => {
-      const list = b.list.ordered(
-        "item 1",
-        b.list.ordered("nested"),
-      );
+      const list = b.list.ordered("item 1", b.list.ordered("nested"));
       const result = list.render({ enforce: { list: { indent: 4 } } });
       expect(result).toBe("1. item 1\n    1. nested");
     });
@@ -382,9 +384,7 @@ describe("RenderingOptions", () => {
     it("should apply 'between_blocks' to nested sections", () => {
       expect(
         b
-          .doc(
-            b.sec(b.h("Title"), "one", "two"),
-          )
+          .doc(b.sec(b.h("Title"), "one", "two"))
           .render({ newlineStrategy: "between_blocks" }),
       ).toBe("## Title\n\none\n\ntwo");
     });
@@ -507,9 +507,7 @@ describe("RenderingOptions", () => {
   describe("multiple enforce options combined", () => {
     it("should enforce bold, italic, and unorderedListItem simultaneously", () => {
       const doc = b.doc(
-        b.list.unordered(
-          b.p(b.bold("strong"), " and ", b.italic("emphasis")),
-        ),
+        b.list.unordered(b.p(b.bold("strong"), " and ", b.italic("emphasis"))),
       );
       const result = doc.render({
         enforce: {
@@ -522,9 +520,7 @@ describe("RenderingOptions", () => {
     });
 
     it("should enforce taskItem and bold simultaneously", () => {
-      const doc = b.doc(
-        b.list.tasks([true, b.bold("important task")]),
-      );
+      const doc = b.doc(b.list.tasks([true, b.bold("important task")]));
       const result = doc.render({
         enforce: {
           taskItem: { style: "X" },
@@ -535,11 +531,7 @@ describe("RenderingOptions", () => {
     });
 
     it("should enforce horizontalRule and italic simultaneously", () => {
-      const doc = b.doc(
-        b.italic("text"),
-        b.hr(),
-        b.italic("more"),
-      );
+      const doc = b.doc(b.italic("text"), b.hr(), b.italic("more"));
       const result = doc.render({
         enforce: {
           horizontalRule: { style: "*" },
@@ -552,35 +544,25 @@ describe("RenderingOptions", () => {
 
   describe("options propagation through nested blocks", () => {
     it("should propagate enforce.bold through a document to nested bold blocks", () => {
-      const doc = b.doc(
-        b.p(b.bold("outer")),
-        b.sec(b.p(b.bold("inner"))),
-      );
+      const doc = b.doc(b.p(b.bold("outer")), b.sec(b.p(b.bold("inner"))));
       const result = doc.render({ enforce: { bold: { style: "__" } } });
       expect(result).toBe("__outer__\n__inner__");
     });
 
     it("should propagate enforce.italic through blockquotes", () => {
-      const doc = b.doc(
-        b.bq(b.italic("quoted emphasis")),
-      );
+      const doc = b.doc(b.bq(b.italic("quoted emphasis")));
       const result = doc.render({ enforce: { italic: { style: "_" } } });
       expect(result).toBe("> _quoted emphasis_");
     });
 
     it("should propagate lineJoinString through nested inline blocks", () => {
-      const doc = b.doc(
-        b.p("a", b.bold("b", "c")),
-      );
+      const doc = b.doc(b.p("a", b.bold("b", "c")));
       const result = doc.render({ lineJoinString: " " });
       expect(result).toBe("a **b c**");
     });
 
     it("should propagate enforce.unorderedListItem through nested lists", () => {
-      const list = b.list.unordered(
-        "top",
-        b.list.unordered("nested"),
-      );
+      const list = b.list.unordered("top", b.list.unordered("nested"));
       const result = list.render({
         enforce: { unorderedListItem: { style: "+" } },
       });
@@ -593,9 +575,7 @@ describe("RenderingOptions", () => {
         b.list.unordered("level 2", b.list.unordered("level 3")),
       );
       const result = list.render({ enforce: { list: { indent: 4 } } });
-      expect(result).toBe(
-        "- level 1\n    - level 2\n        - level 3",
-      );
+      expect(result).toBe("- level 1\n    - level 2\n        - level 3");
     });
 
     it("should propagate newlineStrategy through sections", () => {
@@ -606,16 +586,11 @@ describe("RenderingOptions", () => {
       const result = doc.render({
         newlineStrategy: "between_blocks",
       });
-      expect(result).toBe(
-        "## Title\n\none\n\ntwo\n\n## Title 2\n\nthree",
-      );
+      expect(result).toBe("## Title\n\none\n\ntwo\n\n## Title 2\n\nthree");
     });
 
     it("should propagate renderNullish through nested structures", () => {
-      const doc = b.doc(
-        b.p("hello", null),
-        b.bq(b.p("world", undefined)),
-      );
+      const doc = b.doc(b.p("hello", null), b.bq(b.p("world", undefined)));
       const result = doc.render({ renderNullish: true });
       expect(result).toBe("hellonull\n> worldundefined");
     });

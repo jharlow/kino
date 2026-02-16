@@ -24,6 +24,7 @@ import { details } from "./blocks/hacks/markdown-details-block";
 import { u, underline } from "./blocks/hacks/markdown-underline-block";
 import { renderingOptions } from "./blocks/primitives/markdown-block";
 import { inspect } from "./blocks/primitives/markdown-block-inspector";
+import { MarkdownMultilineBlockContent } from "./blocks/primitives/markdown-multiline-block";
 import {
   block,
   blockquote,
@@ -52,7 +53,7 @@ import {
 } from "./blocks/utilities/markdown-document-block";
 import { s, sec, section } from "./blocks/utilities/markdown-section-block";
 import { parse } from "./parsing/markdown-block-parser";
-import { markdown, md } from "./parsing/markdown-literal";
+import { markdown, MarkdownLiteral, md } from "./parsing/markdown-literal";
 
 // Re-export all types and classes
 
@@ -159,7 +160,8 @@ const listItem = {
   task: taskItem,
   t: taskItem,
 };
-export const b = {
+
+const api = {
   markdown,
   md,
   document: document_,
@@ -223,5 +225,11 @@ export const b = {
   parse,
   inspect,
 } as const;
+
+export type Bamd = typeof api & {
+  (strings: TemplateStringsArray, ...exprs: Array<MarkdownMultilineBlockContent>): MarkdownLiteral;
+};
+
+export const b: Bamd = Object.assign(md, api) as Bamd;
 
 export default b;

@@ -54,15 +54,15 @@ describe("MarkdownUnorderedListItemBlock", () => {
   });
 
   it("should include style in metadata tags when set", () => {
-    expect(
-      b.listItem.unordered("item").style("*").getMetadataTags(),
-    ).toContain("style=*");
+    expect(b.listItem.unordered("item").style("*").getMetadataTags()).toContain(
+      "style=*",
+    );
   });
 
   it("should include style=+ in metadata tags when set", () => {
-    expect(
-      b.listItem.unordered("item").style("+").getMetadataTags(),
-    ).toContain("style=+");
+    expect(b.listItem.unordered("item").style("+").getMetadataTags()).toContain(
+      "style=+",
+    );
   });
 
   it("should have no metadata tags with default style", () => {

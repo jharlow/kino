@@ -86,9 +86,7 @@ describe("MarkdownBlockquoteBlock", () => {
   });
 
   it("should render tip alert", () => {
-    expect(String(b.blockquote("text").alert("tip"))).toBe(
-      "> [!TIP]\n> text",
-    );
+    expect(String(b.blockquote("text").alert("tip"))).toBe("> [!TIP]\n> text");
   });
 
   it("should render important alert", () => {

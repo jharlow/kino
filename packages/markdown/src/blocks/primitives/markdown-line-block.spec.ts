@@ -337,9 +337,7 @@ describe("MarkdownLineBlock", () => {
     });
 
     it("should accept inline blocks in heading", () => {
-      expect(String(b.h("Hello ", b.bold("world")))).toBe(
-        "# Hello **world**",
-      );
+      expect(String(b.h("Hello ", b.bold("world")))).toBe("# Hello **world**");
     });
 
     it("should clear heading line when emptyIf is truthy", () => {
@@ -355,9 +353,7 @@ describe("MarkdownLineBlock", () => {
     });
 
     it("should not override existing heading content with defaultIfEmpty", () => {
-      expect(b.h("Title").defaultIfEmpty("Fallback").render()).toBe(
-        "# Title",
-      );
+      expect(b.h("Title").defaultIfEmpty("Fallback").render()).toBe("# Title");
     });
   });
 });

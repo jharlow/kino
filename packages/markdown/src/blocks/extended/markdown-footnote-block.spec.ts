@@ -51,7 +51,10 @@ describe("MarkdownFootnoteBlock", () => {
     });
 
     it("should only set the identifier once", () => {
-      const block = b.footnote("content").identifier("first").identifier("second");
+      const block = b
+        .footnote("content")
+        .identifier("first")
+        .identifier("second");
       expect(block.$identifier).toBe("first");
     });
 
@@ -107,9 +110,9 @@ describe("MarkdownFootnoteBlock", () => {
 
   describe("renderDefinition", () => {
     it("should render the full footnote definition", () => {
-      expect(b.footnote("Some explanation").id("note1").renderDefinition()).toBe(
-        "[^note1]: Some explanation",
-      );
+      expect(
+        b.footnote("Some explanation").id("note1").renderDefinition(),
+      ).toBe("[^note1]: Some explanation");
     });
 
     it("should return null when no identifier is set", () => {

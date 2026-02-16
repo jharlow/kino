@@ -28,9 +28,7 @@ describe("MarkdownBlockInspector", () => {
     it("should show metadata tags in brackets after the block name", () => {
       const block = b.h("My Heading").level(2).id("my-id");
       const lines = b.inspect(block).split("\n");
-      expect(lines[0]).toBe(
-        "MarkdownHeadingBlock [identifier=my-id, level=2]",
-      );
+      expect(lines[0]).toBe("MarkdownHeadingBlock [identifier=my-id, level=2]");
     });
 
     it("should show level metadata on heading", () => {
@@ -48,9 +46,7 @@ describe("MarkdownBlockInspector", () => {
     it("should show url metadata on link block", () => {
       const block = b.link("https://example.com", "click here");
       const lines = b.inspect(block).split("\n");
-      expect(lines[0]).toBe(
-        "MarkdownLinkBlock [url=https://example.com]",
-      );
+      expect(lines[0]).toBe("MarkdownLinkBlock [url=https://example.com]");
     });
 
     it("should show src metadata on image block", () => {
@@ -88,10 +84,7 @@ describe("MarkdownBlockInspector", () => {
     it("should display string children with quotes", () => {
       const block = b.bold("hello");
       expect(b.inspect(block)).toBe(
-        [
-          "MarkdownBoldBlock",
-          '└── "hello"',
-        ].join("\n"),
+        ["MarkdownBoldBlock", '└── "hello"'].join("\n"),
       );
     });
 
@@ -169,10 +162,7 @@ describe("MarkdownBlockInspector", () => {
     });
 
     it("should use │   for continuation under non-last siblings", () => {
-      const block = b.doc(
-        b.p("para1"),
-        b.p("para2"),
-      );
+      const block = b.doc(b.p("para1"), b.p("para2"));
       const lines = b.inspect(block).split("\n");
       // ├── MarkdownParagraphBlock
       // │   └── "para1"
@@ -186,9 +176,7 @@ describe("MarkdownBlockInspector", () => {
     });
 
     it("should use 4 spaces for continuation under last sibling", () => {
-      const block = b.doc(
-        b.p("text"),
-      );
+      const block = b.doc(b.p("text"));
       const lines = b.inspect(block).split("\n");
       expect(lines[0]).toBe("MarkdownDocument");
       expect(lines[1]).toBe("└── MarkdownParagraphBlock");
@@ -225,10 +213,7 @@ describe("MarkdownBlockInspector", () => {
 
   describe("$lines containers (multiline blocks)", () => {
     it("should show children from $lines in a document", () => {
-      const block = b.doc(
-        b.h("Title").level(1),
-        b.p("Body"),
-      );
+      const block = b.doc(b.h("Title").level(1), b.p("Body"));
       const result = b.inspect(block);
       expect(result).toBe(
         [
@@ -242,9 +227,7 @@ describe("MarkdownBlockInspector", () => {
     });
 
     it("should show children from $lines in a blockquote", () => {
-      const block = b.blockquote(
-        b.p("quoted text"),
-      );
+      const block = b.blockquote(b.p("quoted text"));
       const result = b.inspect(block);
       expect(result).toBe(
         [
@@ -289,11 +272,7 @@ describe("MarkdownBlockInspector", () => {
       const block = b.bold("strong ", "text");
       const result = b.inspect(block);
       expect(result).toBe(
-        [
-          "MarkdownBoldBlock",
-          '├── "strong "',
-          '└── "text"',
-        ].join("\n"),
+        ["MarkdownBoldBlock", '├── "strong "', '└── "text"'].join("\n"),
       );
     });
 
@@ -301,11 +280,7 @@ describe("MarkdownBlockInspector", () => {
       const block = b.italic("em ", "text");
       const result = b.inspect(block);
       expect(result).toBe(
-        [
-          "MarkdownItalicBlock",
-          '├── "em "',
-          '└── "text"',
-        ].join("\n"),
+        ["MarkdownItalicBlock", '├── "em "', '└── "text"'].join("\n"),
       );
     });
 
@@ -443,10 +418,9 @@ describe("MarkdownBlockInspector", () => {
       const block = b.link("https://example.com", "Example");
       const result = b.inspect(block);
       expect(result).toBe(
-        [
-          "MarkdownLinkBlock [url=https://example.com]",
-          '└── "Example"',
-        ].join("\n"),
+        ["MarkdownLinkBlock [url=https://example.com]", '└── "Example"'].join(
+          "\n",
+        ),
       );
     });
 
@@ -454,10 +428,7 @@ describe("MarkdownBlockInspector", () => {
       const block = b.img("pic.png", "alt text");
       const result = b.inspect(block);
       expect(result).toBe(
-        [
-          "MarkdownImageBlock [src=pic.png]",
-          '└── "alt text"',
-        ].join("\n"),
+        ["MarkdownImageBlock [src=pic.png]", '└── "alt text"'].join("\n"),
       );
     });
 
@@ -465,10 +436,7 @@ describe("MarkdownBlockInspector", () => {
       const block = b.code("const x = 1;").language("js");
       const result = b.inspect(block);
       expect(result).toBe(
-        [
-          "MarkdownCodeBlock [language=js]",
-          '└── "const x = 1;"',
-        ].join("\n"),
+        ["MarkdownCodeBlock [language=js]", '└── "const x = 1;"'].join("\n"),
       );
     });
 
@@ -529,9 +497,7 @@ describe("MarkdownBlockInspector", () => {
 
   describe("deep nesting", () => {
     it("should handle three levels of nesting with correct indentation", () => {
-      const block = b.doc(
-        b.p("text ", b.bold(b.italic("deep"))),
-      );
+      const block = b.doc(b.p("text ", b.bold(b.italic("deep"))));
       const result = b.inspect(block);
       expect(result).toBe(
         [
@@ -547,11 +513,7 @@ describe("MarkdownBlockInspector", () => {
 
     it("should handle deep nesting with multiple siblings at each level", () => {
       const block = b.doc(
-        b.p(
-          "start ",
-          b.bold("b1 ", b.italic("i1")),
-          " end",
-        ),
+        b.p("start ", b.bold("b1 ", b.italic("i1")), " end"),
         b.p("second"),
       );
       const result = b.inspect(block);
@@ -572,10 +534,7 @@ describe("MarkdownBlockInspector", () => {
     });
 
     it("should handle blockquote with nested content", () => {
-      const block = b.blockquote(
-        b.p("line1 ", b.bold("bold")),
-        b.p("line2"),
-      );
+      const block = b.blockquote(b.p("line1 ", b.bold("bold")), b.p("line2"));
       const result = b.inspect(block);
       expect(result).toBe(
         [
@@ -668,11 +627,7 @@ describe("MarkdownBlockInspector", () => {
       const block = b.p("count: ", 42);
       const result = b.inspect(block);
       expect(result).toBe(
-        [
-          "MarkdownParagraphBlock",
-          '├── "count: "',
-          "└── 42",
-        ].join("\n"),
+        ["MarkdownParagraphBlock", '├── "count: "', "└── 42"].join("\n"),
       );
     });
 

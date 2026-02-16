@@ -54,9 +54,7 @@ describe("MarkdownSectionBlock", () => {
 
   it("should cap heading level at 6 for deeply nested sections", () => {
     const deep = b.sec(
-      b.sec(
-        b.sec(b.sec(b.sec(b.sec(b.sec(b.h("Very Deep"), "body"))))),
-      ),
+      b.sec(b.sec(b.sec(b.sec(b.sec(b.sec(b.h("Very Deep"), "body")))))),
     );
     expect(String(deep)).toBe("###### Very Deep\nbody");
   });
@@ -80,12 +78,8 @@ describe("MarkdownSectionBlock", () => {
   });
 
   it("should collect footnotes and auto-assign numeric IDs", () => {
-    const sec = b.sec(
-      b.para("Some text", b.footnote("footnote content")),
-    );
-    expect(String(sec)).toBe(
-      "Some text[^1]\n\n[^1]: footnote content",
-    );
+    const sec = b.sec(b.para("Some text", b.footnote("footnote content")));
+    expect(String(sec)).toBe("Some text[^1]\n\n[^1]: footnote content");
   });
 
   it("should auto-assign multiple footnotes incrementally", () => {
@@ -117,9 +111,7 @@ describe("MarkdownSectionBlock", () => {
   });
 
   it("should collect footnotes from deeply nested content", () => {
-    const sec = b.sec(
-      b.sec(b.sec(b.para("Deep", b.footnote("deep note")))),
-    );
+    const sec = b.sec(b.sec(b.sec(b.para("Deep", b.footnote("deep note")))));
     expect(String(sec)).toBe("Deep[^1]\n\n[^1]: deep note");
   });
 
@@ -128,12 +120,8 @@ describe("MarkdownSectionBlock", () => {
   });
 
   it("should collect footnotes from inline blocks within line blocks", () => {
-    const sec = b.sec(
-      b.p("text ", b.bold("bold"), b.footnote("fn content")),
-    );
-    expect(String(sec)).toBe(
-      "text **bold**[^1]\n\n[^1]: fn content",
-    );
+    const sec = b.sec(b.p("text ", b.bold("bold"), b.footnote("fn content")));
+    expect(String(sec)).toBe("text **bold**[^1]\n\n[^1]: fn content");
   });
 
   it("should report isEmpty correctly when empty", () => {

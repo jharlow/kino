@@ -129,9 +129,7 @@ describe("MarkdownLinkBlock", () => {
 
     it("should render nested bold inside targeted link", () => {
       expect(
-        String(
-          b.link("https://example.com", b.bold("Bold")).target("_blank"),
-        ),
+        String(b.link("https://example.com", b.bold("Bold")).target("_blank")),
       ).toBe('<a href="https://example.com" target="_blank">**Bold**</a>');
     });
 

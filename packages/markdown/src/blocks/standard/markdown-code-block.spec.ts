@@ -22,9 +22,7 @@ describe("MarkdownCodeBlock", () => {
 
   describe("fenced code block (multi-line)", () => {
     it("should render multi-line content as a fenced block", () => {
-      expect(String(b.code("line1\nline2"))).toBe(
-        "```\nline1\nline2\n```",
-      );
+      expect(String(b.code("line1\nline2"))).toBe("```\nline1\nline2\n```");
     });
 
     it("should render fenced block with three or more lines", () => {
@@ -34,9 +32,7 @@ describe("MarkdownCodeBlock", () => {
 
   describe("fenced code block (with language)", () => {
     it("should render single-line content as fenced when language is set", () => {
-      expect(String(b.code("x = 1").language("py"))).toBe(
-        "```py\nx = 1\n```",
-      );
+      expect(String(b.code("x = 1").language("py"))).toBe("```py\nx = 1\n```");
     });
 
     it("should render multi-line content with language", () => {
@@ -46,9 +42,7 @@ describe("MarkdownCodeBlock", () => {
     });
 
     it("should accept various language identifiers", () => {
-      expect(String(b.code("{}").language("json"))).toBe(
-        "```json\n{}\n```",
-      );
+      expect(String(b.code("{}").language("json"))).toBe("```json\n{}\n```");
       expect(String(b.code("<p>hi</p>").language("html"))).toBe(
         "```html\n<p>hi</p>\n```",
       );

@@ -313,8 +313,7 @@ describe("parse", () => {
       });
 
       it("should parse _top target", () => {
-        const input =
-          '<a href="https://example.com" target="_top">Example</a>';
+        const input = '<a href="https://example.com" target="_top">Example</a>';
         const doc = b.parse(input);
         const para = doc.$lines[0] as any;
         const link = para.$content[0] as MarkdownLinkBlock;
@@ -1211,8 +1210,7 @@ describe("parse", () => {
     });
 
     it("should parse details without summary content", () => {
-      const input =
-        "<details>\n  <summary></summary>\n  Content\n</details>";
+      const input = "<details>\n  <summary></summary>\n  Content\n</details>";
       const doc = b.parse(input);
       expect(String(doc)).toBe(input);
     });

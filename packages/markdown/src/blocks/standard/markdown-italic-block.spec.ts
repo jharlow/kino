@@ -38,9 +38,7 @@ describe("MarkdownItalicBlock", () => {
   });
 
   it("should include style in metadata tags when set", () => {
-    expect(b.italic("text").style("_").getMetadataTags()).toContain(
-      "style=_",
-    );
+    expect(b.italic("text").style("_").getMetadataTags()).toContain("style=_");
   });
 
   it("should have no metadata tags with default style", () => {

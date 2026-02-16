@@ -59,14 +59,12 @@ describe("MarkdownDetailsBlock", () => {
       expect(
         String(b.details("content").summary("Click ", b.bold("here"))),
       ).toBe(
-        '<details>\n  <summary>Click **here**</summary>\n  content\n</details>',
+        "<details>\n  <summary>Click **here**</summary>\n  content\n</details>",
       );
     });
 
     it("should render summary with nested italic", () => {
-      expect(
-        String(b.details("content").summary(b.italic("emphasis"))),
-      ).toBe(
+      expect(String(b.details("content").summary(b.italic("emphasis")))).toBe(
         "<details>\n  <summary>*emphasis*</summary>\n  content\n</details>",
       );
     });

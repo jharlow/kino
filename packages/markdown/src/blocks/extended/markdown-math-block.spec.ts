@@ -20,9 +20,7 @@ describe("MarkdownMathBlock", () => {
 
   describe("block math (multiple content or newlines)", () => {
     it("should render multiple strings with $$ delimiters", () => {
-      expect(b.math("x^2", " + ", "y^2").render()).toBe(
-        "$$\nx^2 + y^2\n$$",
-      );
+      expect(b.math("x^2", " + ", "y^2").render()).toBe("$$\nx^2 + y^2\n$$");
     });
 
     it("should render content containing newlines with $$ delimiters", () => {

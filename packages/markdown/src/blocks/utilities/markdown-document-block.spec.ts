@@ -35,9 +35,7 @@ describe("MarkdownDocument", () => {
   });
 
   it("should render heading at level 1 for a section inside the document", () => {
-    expect(String(b.doc(b.sec(b.h("Section Title"))))).toBe(
-      "## Section Title",
-    );
+    expect(String(b.doc(b.sec(b.h("Section Title"))))).toBe("## Section Title");
   });
 
   it("should adjust heading levels based on section nesting depth", () => {
@@ -55,11 +53,7 @@ describe("MarkdownDocument", () => {
 
   it("should cap heading level at 6 for deeply nested sections", () => {
     const doc = b.doc(
-      b.sec(
-        b.sec(
-          b.sec(b.sec(b.sec(b.sec(b.h("Level 7"), "body")))),
-        ),
-      ),
+      b.sec(b.sec(b.sec(b.sec(b.sec(b.sec(b.h("Level 7"), "body")))))),
     );
     expect(String(doc)).toBe("###### Level 7\nbody");
   });
@@ -76,12 +70,8 @@ describe("MarkdownDocument", () => {
   });
 
   it("should collect footnotes and auto-assign numeric IDs", () => {
-    const doc = b.doc(
-      b.para("Some text", b.footnote("footnote content")),
-    );
-    expect(String(doc)).toBe(
-      "Some text[^1]\n\n[^1]: footnote content",
-    );
+    const doc = b.doc(b.para("Some text", b.footnote("footnote content")));
+    expect(String(doc)).toBe("Some text[^1]\n\n[^1]: footnote content");
   });
 
   it("should auto-assign multiple footnotes incrementally", () => {
@@ -113,9 +103,7 @@ describe("MarkdownDocument", () => {
   });
 
   it("should collect footnotes from nested sections", () => {
-    const doc = b.doc(
-      b.sec(b.sec(b.para("Deep", b.footnote("deep note")))),
-    );
+    const doc = b.doc(b.sec(b.sec(b.para("Deep", b.footnote("deep note")))));
     expect(String(doc)).toBe("Deep[^1]\n\n[^1]: deep note");
   });
 
@@ -127,9 +115,7 @@ describe("MarkdownDocument", () => {
     const doc = b.doc(
       b.para("Text", b.footnote("line one", b.bold("line two"))),
     );
-    expect(String(doc)).toBe(
-      "Text[^1]\n\n[^1]: line one\n**line two**",
-    );
+    expect(String(doc)).toBe("Text[^1]\n\n[^1]: line one\n**line two**");
   });
 
   it("should report isEmpty correctly when empty", () => {
@@ -179,17 +165,12 @@ describe("MarkdownDocument", () => {
   it("should embed a parsed document and adjust heading levels", () => {
     const inner = b.parse("# A\n## B\ntext");
     const outer = b.doc(b.sec(b.h("Top"), inner));
-    expect(String(outer)).toBe(
-      "## Top\n### A\n#### B\ntext",
-    );
+    expect(String(outer)).toBe("## Top\n### A\n#### B\ntext");
   });
 
   it("should embed the same parsed document in multiple locations", () => {
     const inner = b.parse("# A\n## B\ntext");
-    const outer = b.doc(
-      b.sec(b.h("Top"), inner, b.sec(inner)),
-      inner,
-    );
+    const outer = b.doc(b.sec(b.h("Top"), inner, b.sec(inner)), inner);
     expect(String(outer)).toBe(
       "## Top\n### A\n#### B\ntext\n#### A\n##### B\ntext\n## A\n### B\ntext",
     );
@@ -218,10 +199,7 @@ describe("MarkdownDocument", () => {
           b.para("Section content", b.footnote("section note")),
         ),
       ),
-      b.sec(
-        b.h("Chapter 2"),
-        b.para("Another chapter"),
-      ),
+      b.sec(b.h("Chapter 2"), b.para("Another chapter")),
     );
     expect(String(doc)).toBe(
       "# Document Title\nIntro text[^1]\n## Chapter 1\nChapter content\n### Section 1.1\nSection content[^2]\n## Chapter 2\nAnother chapter\n\n[^1]: intro note\n[^2]: section note",
