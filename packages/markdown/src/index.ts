@@ -132,6 +132,7 @@ export { MarkdownTaskListBlock } from "./blocks/extended/markdown-task-list-bloc
 
 // Hacks
 export { MarkdownCommentBlock } from "./blocks/hacks/markdown-comment-block";
+export { MarkdownDetailsBlock } from "./blocks/hacks/markdown-details-block";
 export { MarkdownUnderlineBlock } from "./blocks/hacks/markdown-underline-block";
 
 // Utilities

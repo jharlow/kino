@@ -84,4 +84,56 @@ describe("MarkdownBlockquoteBlock", () => {
       "> [!NOTE]\n> text",
     );
   });
+
+  it("should render tip alert", () => {
+    expect(String(b.blockquote("text").alert("tip"))).toBe(
+      "> [!TIP]\n> text",
+    );
+  });
+
+  it("should render important alert", () => {
+    expect(String(b.blockquote("text").alert("important"))).toBe(
+      "> [!IMPORTANT]\n> text",
+    );
+  });
+
+  it("should render warning alert", () => {
+    expect(String(b.blockquote("text").alert("warning"))).toBe(
+      "> [!WARNING]\n> text",
+    );
+  });
+
+  it("should render caution alert", () => {
+    expect(String(b.blockquote("text").alert("caution"))).toBe(
+      "> [!CAUTION]\n> text",
+    );
+  });
+
+  it("should render alert with multiple lines", () => {
+    expect(String(b.blockquote("line one", "line two").alert("note"))).toBe(
+      "> [!NOTE]\n> line one\n> line two",
+    );
+  });
+
+  it("should render alert with inline formatting", () => {
+    expect(String(b.blockquote(b.bold("important")).alert("warning"))).toBe(
+      "> [!WARNING]\n> **important**",
+    );
+  });
+
+  it("should clear alert when set to undefined", () => {
+    const bq = b.blockquote("text").alert("note");
+    bq.alert(undefined);
+    expect(String(bq)).toBe("> text");
+  });
+
+  it("should include alert in metadata tags", () => {
+    const bq = b.blockquote("text").alert("tip");
+    expect(bq.getMetadataTags()).toContain("alert=tip");
+  });
+
+  it("should not include alert in metadata tags when unset", () => {
+    const bq = b.blockquote("text");
+    expect(bq.getMetadataTags().join(",")).not.toContain("alert=");
+  });
 });

@@ -146,6 +146,78 @@ describe("MarkdownMultilineBlock", () => {
     });
   });
 
+  describe("change()", () => {
+    it("should pass the block to the callback and return the result", () => {
+      const block = new MarkdownMultilineBlock("line one", "line two");
+      const result = block.change((blk) => {
+        blk.$lines.push("line three");
+        return blk;
+      });
+      expect(result.render()).toBe("line one\nline two\nline three");
+    });
+
+    it("should return a different block if the callback creates one", () => {
+      const block = new MarkdownMultilineBlock("old");
+      const result = block.change(() => new MarkdownMultilineBlock("replaced"));
+      expect(result.render()).toBe("replaced");
+    });
+
+    it("should receive the original block as the argument", () => {
+      const block = new MarkdownMultilineBlock("original");
+      block.change((received) => {
+        expect(received).toBe(block);
+        return received;
+      });
+    });
+
+    it("should allow replacing lines", () => {
+      const block = new MarkdownMultilineBlock("a", "b");
+      const result = block.change((blk) => {
+        blk.$lines = ["x", "y", "z"];
+        return blk;
+      });
+      expect(result.render()).toBe("x\ny\nz");
+    });
+
+    it("should work on empty blocks", () => {
+      const block = new MarkdownMultilineBlock();
+      const result = block.change((blk) => {
+        blk.$lines = ["filled"];
+        return blk;
+      });
+      expect(result.render()).toBe("filled");
+    });
+
+    it("should allow conditional transformation", () => {
+      const addLine = true;
+      const block = new MarkdownMultilineBlock("first");
+      const result = block.change((blk) => {
+        if (addLine) blk.$lines.push("second");
+        return blk;
+      });
+      expect(result.render()).toBe("first\nsecond");
+    });
+
+    it("should allow conditional no-op", () => {
+      const addLine = false;
+      const block = new MarkdownMultilineBlock("first");
+      const result = block.change((blk) => {
+        if (addLine) blk.$lines.push("second");
+        return blk;
+      });
+      expect(result.render()).toBe("first");
+    });
+
+    it("should work with block content", () => {
+      const block = new MarkdownMultilineBlock("text");
+      const result = block.change((blk) => {
+        blk.$lines.push(b.bold("bold line"));
+        return blk;
+      });
+      expect(result.render()).toBe("text\n**bold line**");
+    });
+  });
+
   describe("defaultIfEmpty()", () => {
     it("should set content when empty", () => {
       const block = new MarkdownMultilineBlock().defaultIfEmpty("fallback");
@@ -235,9 +307,7 @@ describe("MarkdownMultilineBlock", () => {
     });
 
     it("should set depth on nested MarkdownDocument to parent depth + 1", () => {
-      const block = new MarkdownMultilineBlock(
-        b.doc(b.h("Doc Title"), "body"),
-      );
+      const block = new MarkdownMultilineBlock(b.doc(b.h("Doc Title"), "body"));
       expect(block.render()).toBe("## Doc Title\nbody");
     });
 
@@ -256,12 +326,7 @@ describe("MarkdownMultilineBlock", () => {
     });
 
     it("should render multiple line breaks as empty strings", () => {
-      const block = new MarkdownMultilineBlock(
-        "line",
-        b.br(),
-        b.br(),
-        "end",
-      );
+      const block = new MarkdownMultilineBlock("line", b.br(), b.br(), "end");
       expect(block.render()).toBe("line\n\n\nend");
     });
   });
@@ -285,9 +350,9 @@ describe("MarkdownMultilineBlock", () => {
       });
 
       it("should handle single line", () => {
-        const block = new MarkdownMultilineBlock(
-          "only",
-        ).setRenderingOptions({ newlineStrategy: "between_blocks" });
+        const block = new MarkdownMultilineBlock("only").setRenderingOptions({
+          newlineStrategy: "between_blocks",
+        });
         expect(block.render()).toBe("only");
       });
     });
@@ -469,10 +534,7 @@ describe("MarkdownMultilineBlock", () => {
     });
 
     it("should support depth-based heading adjustment via nested sections", () => {
-      const doc = b.doc(
-        b.h("Top"),
-        b.sec(b.h("Child")),
-      );
+      const doc = b.doc(b.h("Top"), b.sec(b.h("Child")));
       expect(String(doc)).toBe("# Top\n## Child");
     });
 

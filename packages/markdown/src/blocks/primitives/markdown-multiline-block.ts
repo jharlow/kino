@@ -41,9 +41,9 @@ export class MarkdownMultilineBlock<
     return this.emptyIf(!condition);
   }
 
-  public change(
-    fn: (block: MarkdownMultilineBlock<OPTS>) => MarkdownMultilineBlock<OPTS>,
-  ): MarkdownMultilineBlock<OPTS> {
+  public change<TReturnBlock>(
+    fn: (block: typeof this) => TReturnBlock,
+  ): TReturnBlock {
     return fn(this);
   }
 

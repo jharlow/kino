@@ -38,9 +38,7 @@ describe("MarkdownBoldBlock", () => {
   });
 
   it("should include style in metadata tags when set", () => {
-    expect(b.bold("text").style("__").getMetadataTags()).toContain(
-      "style=__",
-    );
+    expect(b.bold("text").style("__").getMetadataTags()).toContain("style=__");
   });
 
   it("should have no metadata tags with default style", () => {
@@ -71,5 +69,9 @@ describe("MarkdownBoldBlock", () => {
 
   it("should be chainable from paragraph via .bold()", () => {
     expect(String(b.p("text").bold())).toBe("**text**");
+  });
+
+  it("should change()", () => {
+    const block = b.b("text").change((b) => b.bold());
   });
 });

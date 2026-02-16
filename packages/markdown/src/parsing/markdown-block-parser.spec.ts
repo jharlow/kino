@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { b } from "../index";
+import {
+  b,
+  MarkdownBlockquoteBlock,
+  MarkdownCommentBlock,
+  MarkdownDetailsBlock,
+  MarkdownImageBlock,
+  MarkdownLinkBlock,
+  MarkdownUnderlineBlock,
+} from "../index";
 
 describe("parse", () => {
   // ──────────────────────────────────────────────────────────────────────────
@@ -256,6 +264,126 @@ describe("parse", () => {
       const doc = b.parse("[a](url1) and [b](url2)");
       expect(String(doc)).toBe("[a](url1) and [b](url2)");
     });
+
+    describe("HTML links with target", () => {
+      it("should parse <a> tag with href and target", () => {
+        const input =
+          '<a href="https://example.com" target="_blank">Example</a>';
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should set $target on the parsed MarkdownLinkBlock", () => {
+        const doc = b.parse(
+          '<a href="https://example.com" target="_blank">click</a>',
+        );
+        const para = doc.$lines[0] as any;
+        const link = para.$content[0];
+        expect(link).toBeInstanceOf(MarkdownLinkBlock);
+        expect((link as MarkdownLinkBlock).$target).toBe("_blank");
+      });
+
+      it("should set $url on the parsed MarkdownLinkBlock", () => {
+        const doc = b.parse(
+          '<a href="https://example.com" target="_blank">click</a>',
+        );
+        const para = doc.$lines[0] as any;
+        const link = para.$content[0] as MarkdownLinkBlock;
+        expect(link.$url).toBe("https://example.com");
+      });
+
+      it("should parse _self target", () => {
+        const input =
+          '<a href="https://example.com" target="_self">Example</a>';
+        const doc = b.parse(input);
+        const para = doc.$lines[0] as any;
+        const link = para.$content[0] as MarkdownLinkBlock;
+        expect(link.$target).toBe("_self");
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse _parent target", () => {
+        const input =
+          '<a href="https://example.com" target="_parent">Example</a>';
+        const doc = b.parse(input);
+        const para = doc.$lines[0] as any;
+        const link = para.$content[0] as MarkdownLinkBlock;
+        expect(link.$target).toBe("_parent");
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse _top target", () => {
+        const input =
+          '<a href="https://example.com" target="_top">Example</a>';
+        const doc = b.parse(input);
+        const para = doc.$lines[0] as any;
+        const link = para.$content[0] as MarkdownLinkBlock;
+        expect(link.$target).toBe("_top");
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse <a> with surrounding text", () => {
+        const input =
+          'before <a href="https://example.com" target="_blank">link</a> after';
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse <a> with nested bold", () => {
+        const input =
+          '<a href="https://example.com" target="_blank">**bold link**</a>';
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should not confuse <a> tags with auto-links", () => {
+        const doc = b.parse(
+          '<a href="https://example.com" target="_blank">link</a> and <https://other.com>',
+        );
+        expect(String(doc)).toBe(
+          '<a href="https://example.com" target="_blank">link</a> and <https://other.com>',
+        );
+      });
+
+      it("should not confuse <a> tags with <ins> tags", () => {
+        const doc = b.parse(
+          '<a href="https://example.com" target="_blank">link</a> and <ins>underlined</ins>',
+        );
+        expect(String(doc)).toBe(
+          '<a href="https://example.com" target="_blank">link</a> and <ins>underlined</ins>',
+        );
+      });
+
+      it("should show target in inspect metadata", () => {
+        const doc = b.parse(
+          '<a href="https://example.com" target="_blank">click</a>',
+        );
+        const tree = b.inspect(doc);
+        expect(tree).toContain("MarkdownLinkBlock");
+        expect(tree).toContain("target=_blank");
+        expect(tree).toContain("url=https://example.com");
+      });
+
+      it("should show target=_self in inspect metadata", () => {
+        const doc = b.parse(
+          '<a href="https://example.com" target="_self">click</a>',
+        );
+        const tree = b.inspect(doc);
+        expect(tree).toContain("target=_self");
+      });
+
+      it("should round-trip an HTML link with target", () => {
+        const input =
+          '<a href="https://example.com" target="_blank">Example</a>';
+        expect(String(b.parse(input))).toBe(input);
+      });
+
+      it("should round-trip HTML link mixed with markdown links", () => {
+        const input =
+          '[md link](url) and <a href="https://example.com" target="_blank">html link</a>';
+        expect(String(b.parse(input))).toBe(input);
+      });
+    });
   });
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -275,6 +403,107 @@ describe("parse", () => {
     it("should parse an image with inline text surrounding it", () => {
       const doc = b.parse("before ![logo](logo.png) after");
       expect(String(doc)).toBe("before ![logo](logo.png) after");
+    });
+
+    describe("figure with caption", () => {
+      it("should parse a figure with img and figcaption", () => {
+        const input =
+          '<figure>\n  <img src="photo.png" alt="A photo">\n  <figcaption>A caption</figcaption>\n</figure>';
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should produce a MarkdownImageBlock with $caption set", () => {
+        const doc = b.parse(
+          '<figure>\n  <img src="photo.png" alt="alt">\n  <figcaption>caption</figcaption>\n</figure>',
+        );
+        const img = doc.$lines[0];
+        expect(img).toBeInstanceOf(MarkdownImageBlock);
+        expect((img as MarkdownImageBlock).$caption).toBeTruthy();
+      });
+
+      it("should set $src on the parsed image block", () => {
+        const doc = b.parse(
+          '<figure>\n  <img src="photo.png" alt="alt">\n  <figcaption>caption</figcaption>\n</figure>',
+        );
+        const img = doc.$lines[0] as MarkdownImageBlock;
+        expect(img.$src).toBe("photo.png");
+      });
+
+      it("should parse alt text into $content", () => {
+        const doc = b.parse(
+          '<figure>\n  <img src="photo.png" alt="alt text">\n  <figcaption>caption</figcaption>\n</figure>',
+        );
+        const img = doc.$lines[0] as MarkdownImageBlock;
+        expect(img.$content).toEqual(["alt text"]);
+      });
+
+      it("should parse caption content", () => {
+        const doc = b.parse(
+          '<figure>\n  <img src="photo.png" alt="alt">\n  <figcaption>My caption</figcaption>\n</figure>',
+        );
+        const img = doc.$lines[0] as MarkdownImageBlock;
+        expect(img.$caption).toEqual(["My caption"]);
+      });
+
+      it("should parse figure without alt attribute", () => {
+        const input =
+          '<figure>\n  <img src="photo.png">\n  <figcaption>A caption</figcaption>\n</figure>';
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+        const img = doc.$lines[0] as MarkdownImageBlock;
+        expect(img.$src).toBe("photo.png");
+        expect(img.$content).toEqual([]);
+      });
+
+      it("should parse caption with inline formatting", () => {
+        const input =
+          '<figure>\n  <img src="photo.png" alt="alt">\n  <figcaption>Taken in **Paris**</figcaption>\n</figure>';
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse figure with surrounding content", () => {
+        const input =
+          'before\n<figure>\n  <img src="photo.png" alt="alt">\n  <figcaption>caption</figcaption>\n</figure>\nafter';
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should show alt and caption as distinct trees in inspect", () => {
+        const doc = b.parse(
+          '<figure>\n  <img src="photo.png" alt="alt text">\n  <figcaption>My caption</figcaption>\n</figure>',
+        );
+        const tree = b.inspect(doc);
+        expect(tree).toContain("MarkdownImageBlock");
+        expect(tree).toContain("src=photo.png");
+        expect(tree).toContain("alt");
+        expect(tree).toContain('"alt text"');
+        expect(tree).toContain("caption");
+        expect(tree).toContain('"My caption"');
+      });
+
+      it("should show only caption in inspect when no alt", () => {
+        const doc = b.parse(
+          '<figure>\n  <img src="photo.png">\n  <figcaption>My caption</figcaption>\n</figure>',
+        );
+        const tree = b.inspect(doc);
+        expect(tree).not.toContain("├── alt");
+        expect(tree).toContain("caption");
+        expect(tree).toContain('"My caption"');
+      });
+
+      it("should round-trip a figure with caption", () => {
+        const input =
+          '<figure>\n  <img src="photo.png" alt="A photo">\n  <figcaption>A caption</figcaption>\n</figure>';
+        expect(String(b.parse(input))).toBe(input);
+      });
+
+      it("should round-trip a figure without alt", () => {
+        const input =
+          '<figure>\n  <img src="photo.png">\n  <figcaption>A caption</figcaption>\n</figure>';
+        expect(String(b.parse(input))).toBe(input);
+      });
     });
   });
 
@@ -306,6 +535,87 @@ describe("parse", () => {
     it("should parse blockquotes with inline formatting", () => {
       const doc = b.parse("> **bold** in quote");
       expect(String(doc)).toBe("> **bold** in quote");
+    });
+
+    describe("GitHub alerts", () => {
+      it("should parse a [!NOTE] alert blockquote", () => {
+        const input = "> [!NOTE]\n> This is a note";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse a [!TIP] alert blockquote", () => {
+        const input = "> [!TIP]\n> This is a tip";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse a [!IMPORTANT] alert blockquote", () => {
+        const input = "> [!IMPORTANT]\n> This is important";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse a [!WARNING] alert blockquote", () => {
+        const input = "> [!WARNING]\n> This is a warning";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse a [!CAUTION] alert blockquote", () => {
+        const input = "> [!CAUTION]\n> This is a caution";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse alert with multiple lines of content", () => {
+        const input = "> [!NOTE]\n> line one\n> line two";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse alert with inline formatting", () => {
+        const input = "> [!WARNING]\n> **bold** warning";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should set the alert property on the parsed block", () => {
+        const doc = b.parse("> [!NOTE]\n> text");
+        const tree = b.inspect(doc);
+        expect(tree).toContain("MarkdownBlockquoteBlock");
+        expect(tree).toContain("alert=note");
+      });
+
+      it("should set $alert on the MarkdownBlockquoteBlock instance", () => {
+        const doc = b.parse("> [!WARNING]\n> be careful");
+        const bq = doc.$lines[0];
+        expect(bq).toBeInstanceOf(MarkdownBlockquoteBlock);
+        expect((bq as MarkdownBlockquoteBlock).$alert).toBe("warning");
+      });
+
+      it("should parse case-insensitively", () => {
+        const doc = b.parse("> [!note]\n> text");
+        expect(String(doc)).toBe("> [!NOTE]\n> text");
+      });
+
+      it("should not treat unknown alert types as alerts", () => {
+        const input = "> [!UNKNOWN]\n> text";
+        const doc = b.parse(input);
+        // Should be parsed as regular blockquote content, not as alert
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse alert blockquote with surrounding content", () => {
+        const input = "before\n> [!TIP]\n> helpful tip\nafter";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should round-trip alert blockquotes", () => {
+        const input = "> [!IMPORTANT]\n> Do not forget this";
+        expect(String(b.parse(input))).toBe(input);
+      });
     });
   });
 
@@ -648,7 +958,329 @@ describe("parse", () => {
   });
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 13. Section nesting
+  // 13. Math blocks
+  // ──────────────────────────────────────────────────────────────────────────
+  describe("math blocks", () => {
+    describe("inline math", () => {
+      it("should parse standalone inline math $...$", () => {
+        const doc = b.parse("$x^2$");
+        expect(String(doc)).toBe("$x^2$");
+      });
+
+      it("should parse inline math within text", () => {
+        const doc = b.parse("the formula $E=mc^2$ is famous");
+        expect(String(doc)).toBe("the formula $E=mc^2$ is famous");
+      });
+
+      it("should parse inline math at start of line", () => {
+        const doc = b.parse("$x$ is a variable");
+        expect(String(doc)).toBe("$x$ is a variable");
+      });
+
+      it("should parse inline math at end of line", () => {
+        const doc = b.parse("value is $42$");
+        expect(String(doc)).toBe("value is $42$");
+      });
+
+      it("should parse multiple inline math per line", () => {
+        const doc = b.parse("$a$ plus $b$ equals $c$");
+        expect(String(doc)).toBe("$a$ plus $b$ equals $c$");
+      });
+    });
+
+    describe("block math", () => {
+      it("should parse a block math fence with single-line content", () => {
+        const doc = b.parse("$$\nx^2\n$$");
+        // Single-line block math collapses to inline on round-trip
+        expect(String(doc)).toBe("$x^2$");
+      });
+
+      it("should parse a block math fence with multi-line content", () => {
+        const input = "$$\na + b\nc + d\n$$";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should dedent indentation in block math like code blocks", () => {
+        const doc = b.parse("$$\n  indented\n    more indented\n$$");
+        expect(String(doc)).toBe("$$\nindented\n  more indented\n$$");
+      });
+
+      it("should preserve empty lines within block math", () => {
+        const input = "$$\nline 1\n\nline 3\n$$";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should parse block math with surrounding content", () => {
+        const doc = b.parse("before\n$$\na + b\nc + d\n$$\nafter");
+        expect(String(doc)).toBe("before\n$$\na + b\nc + d\n$$\nafter");
+      });
+    });
+
+    describe("edge cases", () => {
+      it("should not confuse $$ block delimiters with inline $", () => {
+        const input = "$$\nx + y\nz + w\n$$";
+        const doc = b.parse(input);
+        expect(String(doc)).toBe(input);
+      });
+
+      it("should correctly identify MarkdownMathBlock in the tree for inline math", () => {
+        const doc = b.parse("$x^2$");
+        const tree = b.inspect(doc);
+        expect(tree).toContain("MarkdownMathBlock");
+      });
+
+      it("should correctly identify MarkdownMathBlock in the tree for block math", () => {
+        const doc = b.parse("$$\na + b\nc + d\n$$");
+        const tree = b.inspect(doc);
+        expect(tree).toContain("MarkdownMathBlock");
+      });
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 14. Comments
+  // ──────────────────────────────────────────────────────────────────────────
+  describe("comments", () => {
+    it("should parse a comment [content]: #", () => {
+      const doc = b.parse("[this is a comment]: #");
+      expect(String(doc)).toBe("[this is a comment]: #");
+    });
+
+    it("should produce a MarkdownCommentBlock instance", () => {
+      const doc = b.parse("[comment text]: #");
+      const block = doc.$lines[0];
+      expect(block).toBeInstanceOf(MarkdownCommentBlock);
+    });
+
+    it("should preserve the comment content", () => {
+      const doc = b.parse("[my hidden note]: #");
+      const block = doc.$lines[0] as MarkdownCommentBlock;
+      expect(block.$content).toEqual(["my hidden note"]);
+    });
+
+    it("should parse a comment with surrounding content", () => {
+      const doc = b.parse("before\n[hidden]: #\nafter");
+      expect(String(doc)).toBe("before\n[hidden]: #\nafter");
+      expect(doc.$lines[1]).toBeInstanceOf(MarkdownCommentBlock);
+    });
+
+    it("should parse multiple comments", () => {
+      const doc = b.parse("[comment 1]: #\n[comment 2]: #");
+      expect(String(doc)).toBe("[comment 1]: #\n[comment 2]: #");
+      expect(doc.$lines[0]).toBeInstanceOf(MarkdownCommentBlock);
+      expect(doc.$lines[1]).toBeInstanceOf(MarkdownCommentBlock);
+    });
+
+    it("should not confuse comments with footnote definitions", () => {
+      const doc = b.parse("text[^1]\n\n[^1]: footnote content");
+      expect(String(doc)).not.toContain("]: #");
+    });
+
+    it("should not confuse footnote definitions with comments", () => {
+      const input = "[not a footnote]: #";
+      const doc = b.parse(input);
+      expect(doc.$lines[0]).toBeInstanceOf(MarkdownCommentBlock);
+      expect(String(doc)).toBe(input);
+    });
+
+    it("should correctly identify MarkdownCommentBlock in the tree", () => {
+      const doc = b.parse("[hidden]: #");
+      const tree = b.inspect(doc);
+      expect(tree).toContain("MarkdownCommentBlock");
+    });
+
+    it("should round-trip a comment", () => {
+      const input = "[this is hidden]: #";
+      expect(String(b.parse(input))).toBe(input);
+    });
+
+    it("should round-trip comments mixed with other content", () => {
+      const input = "visible\n[hidden]: #\nmore visible";
+      expect(String(b.parse(input))).toBe(input);
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 15. Underlines
+  // ──────────────────────────────────────────────────────────────────────────
+  describe("underlines", () => {
+    it("should parse inline <ins>content</ins>", () => {
+      const doc = b.parse("<ins>underlined</ins>");
+      expect(String(doc)).toBe("<ins>underlined</ins>");
+    });
+
+    it("should produce a MarkdownUnderlineBlock instance", () => {
+      const doc = b.parse("<ins>text</ins>");
+      const para = doc.$lines[0] as any;
+      // The paragraph wraps the underline block in $content
+      expect(para.$content[0]).toBeInstanceOf(MarkdownUnderlineBlock);
+    });
+
+    it("should parse underline within surrounding text", () => {
+      const doc = b.parse("before <ins>underlined</ins> after");
+      expect(String(doc)).toBe("before <ins>underlined</ins> after");
+    });
+
+    it("should parse underline at start of line", () => {
+      const doc = b.parse("<ins>start</ins> rest");
+      expect(String(doc)).toBe("<ins>start</ins> rest");
+    });
+
+    it("should parse underline at end of line", () => {
+      const doc = b.parse("rest <ins>end</ins>");
+      expect(String(doc)).toBe("rest <ins>end</ins>");
+    });
+
+    it("should parse multiple underlines in one line", () => {
+      const doc = b.parse("<ins>one</ins> and <ins>two</ins>");
+      expect(String(doc)).toBe("<ins>one</ins> and <ins>two</ins>");
+    });
+
+    it("should parse underline with nested bold", () => {
+      const doc = b.parse("<ins>**bold underline**</ins>");
+      expect(String(doc)).toBe("<ins>**bold underline**</ins>");
+    });
+
+    it("should parse underline with nested italic", () => {
+      const doc = b.parse("<ins>*italic underline*</ins>");
+      expect(String(doc)).toBe("<ins>*italic underline*</ins>");
+    });
+
+    it("should not confuse <ins> with auto-links", () => {
+      const doc = b.parse("<ins>text</ins> and <https://example.com>");
+      expect(String(doc)).toBe("<ins>text</ins> and <https://example.com>");
+    });
+
+    it("should correctly identify MarkdownUnderlineBlock in the tree", () => {
+      const doc = b.parse("<ins>underlined</ins>");
+      const tree = b.inspect(doc);
+      expect(tree).toContain("MarkdownUnderlineBlock");
+    });
+
+    it("should round-trip an underline", () => {
+      const input = "<ins>underlined</ins>";
+      expect(String(b.parse(input))).toBe(input);
+    });
+
+    it("should round-trip underline mixed with other formatting", () => {
+      const input = "**bold** and <ins>underlined</ins> and *italic*";
+      expect(String(b.parse(input))).toBe(input);
+    });
+
+    it("should parse underline in a heading", () => {
+      const doc = b.parse("# Title with <ins>underline</ins>");
+      expect(String(doc)).toBe("# Title with <ins>underline</ins>");
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 16. Details
+  // ──────────────────────────────────────────────────────────────────────────
+  describe("details", () => {
+    it("should parse a details block with summary", () => {
+      const input =
+        "<details>\n  <summary>Click me</summary>\n  Some content\n</details>";
+      const doc = b.parse(input);
+      expect(String(doc)).toBe(input);
+    });
+
+    it("should produce a MarkdownDetailsBlock instance", () => {
+      const doc = b.parse(
+        "<details>\n  <summary>Title</summary>\n  Content\n</details>",
+      );
+      const block = doc.$lines[0];
+      expect(block).toBeInstanceOf(MarkdownDetailsBlock);
+    });
+
+    it("should set $summary on the parsed block", () => {
+      const doc = b.parse(
+        "<details>\n  <summary>My summary</summary>\n  Content\n</details>",
+      );
+      const block = doc.$lines[0] as MarkdownDetailsBlock;
+      expect(block.$summary).toEqual(["My summary"]);
+    });
+
+    it("should parse content into $lines", () => {
+      const doc = b.parse(
+        "<details>\n  <summary>Title</summary>\n  Line 1\n  Line 2\n</details>",
+      );
+      const block = doc.$lines[0] as MarkdownDetailsBlock;
+      expect(block.$lines.length).toBe(2);
+    });
+
+    it("should parse details without summary content", () => {
+      const input =
+        "<details>\n  <summary></summary>\n  Content\n</details>";
+      const doc = b.parse(input);
+      expect(String(doc)).toBe(input);
+    });
+
+    it("should parse details with inline formatting in summary", () => {
+      const input =
+        "<details>\n  <summary>Click **here**</summary>\n  Content\n</details>";
+      const doc = b.parse(input);
+      expect(String(doc)).toBe(input);
+    });
+
+    it("should parse details with markdown content", () => {
+      const input =
+        "<details>\n  <summary>Title</summary>\n  **bold** text\n  - list item\n</details>";
+      const doc = b.parse(input);
+      expect(String(doc)).toBe(input);
+    });
+
+    it("should parse details with multi-line content", () => {
+      const input =
+        "<details>\n  <summary>Title</summary>\n  Line 1\n  Line 2\n  Line 3\n</details>";
+      const doc = b.parse(input);
+      expect(String(doc)).toBe(input);
+    });
+
+    it("should parse details with surrounding content", () => {
+      const input =
+        "before\n<details>\n  <summary>Title</summary>\n  Content\n</details>\nafter";
+      const doc = b.parse(input);
+      expect(String(doc)).toBe(input);
+    });
+
+    it("should show summary and content as distinct trees in inspect", () => {
+      const doc = b.parse(
+        "<details>\n  <summary>Click me</summary>\n  Content here\n</details>",
+      );
+      const tree = b.inspect(doc);
+      expect(tree).toContain("MarkdownDetailsBlock");
+      expect(tree).toContain("summary");
+      expect(tree).toContain('"Click me"');
+      expect(tree).toContain("content");
+      expect(tree).toContain('"Content here"');
+    });
+
+    it("should show only content in inspect when summary is empty", () => {
+      const doc = b.parse(
+        "<details>\n  <summary></summary>\n  Content\n</details>",
+      );
+      const tree = b.inspect(doc);
+      expect(tree).not.toContain("├── summary");
+      expect(tree).toContain("content");
+    });
+
+    it("should round-trip a details block", () => {
+      const input =
+        "<details>\n  <summary>Click me</summary>\n  Some content\n</details>";
+      expect(String(b.parse(input))).toBe(input);
+    });
+
+    it("should round-trip details with multi-line content", () => {
+      const input =
+        "<details>\n  <summary>Title</summary>\n  Line 1\n  Line 2\n</details>";
+      expect(String(b.parse(input))).toBe(input);
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 17. Section nesting
   // ──────────────────────────────────────────────────────────────────────────
   describe("section nesting", () => {
     it("should place a top-level heading directly in the document without wrapping section", () => {
@@ -826,6 +1458,21 @@ describe("parse", () => {
 
     it("should round-trip emoji", () => {
       const input = "hello :waffle: world";
+      expect(String(b.parse(input))).toBe(input);
+    });
+
+    it("should round-trip inline math", () => {
+      const input = "the formula $E=mc^2$ is famous";
+      expect(String(b.parse(input))).toBe(input);
+    });
+
+    it("should round-trip block math", () => {
+      const input = "$$\na + b\nc + d\n$$";
+      expect(String(b.parse(input))).toBe(input);
+    });
+
+    it("should round-trip math mixed with other formatting", () => {
+      const input = "**bold** and $x^2$ and *italic*";
       expect(String(b.parse(input))).toBe(input);
     });
 

@@ -50,7 +50,7 @@ test("readme", () => {
   };
 
   const userDoc = createUserDoc(user);
-  console.log(`${userDoc}`);
+  // console.log(`${userDoc}`);
   // # User details
   // The users name is unknown
   // **The users email is**: john.doe@example.com[^1]
@@ -68,5 +68,5 @@ test("readme", () => {
       enforce: { bold: { style: "__" } },
       newlineStrategy: "between_blocks",
     });
-  console.log(String(prompt));
+  // console.log(String(prompt));
 });

@@ -60,9 +60,9 @@ export class MarkdownInlineBlock extends MarkdownBlock {
     return this.emptyIf(!condition);
   }
 
-  public change(
-    fn: (block: MarkdownInlineBlock) => MarkdownInlineBlock,
-  ): MarkdownInlineBlock {
+  public change<TReturnBlock>(
+    fn: (block: typeof this) => TReturnBlock,
+  ): TReturnBlock {
     return fn(this);
   }
 

@@ -2,11 +2,15 @@ import {
   EmojiShortname,
   MarkdownEmojiBlock,
 } from "../blocks/extended/markdown-emoji-block";
+import { MarkdownCommentBlock } from "../blocks/hacks/markdown-comment-block";
+import { MarkdownDetailsBlock } from "../blocks/hacks/markdown-details-block";
+import { MarkdownUnderlineBlock } from "../blocks/hacks/markdown-underline-block";
 import { MarkdownFootnoteBlock } from "../blocks/extended/markdown-footnote-block";
 import { MarkdownHighlightBlock } from "../blocks/extended/markdown-highlight-block";
 import { MarkdownStrikethroughBlock } from "../blocks/extended/markdown-strikethrough-block";
 import { MarkdownSubscriptBlock } from "../blocks/extended/markdown-subscript-block";
 import { MarkdownSuperscriptBlock } from "../blocks/extended/markdown-superscript-block";
+import { MarkdownMathBlock } from "../blocks/extended/markdown-math-block";
 import {
   MarkdownTableAlignStyle,
   MarkdownTableBlock,
@@ -24,7 +28,10 @@ import {
   MarkdownMultilineBlock,
   MarkdownMultilineBlockContent,
 } from "../blocks/primitives/markdown-multiline-block";
-import { MarkdownBlockquoteBlock } from "../blocks/standard/markdown-blockquote-block";
+import {
+  GithubFlavoredBlockquoteAlert,
+  MarkdownBlockquoteBlock,
+} from "../blocks/standard/markdown-blockquote-block";
 import { MarkdownBoldBlock } from "../blocks/standard/markdown-bold-block";
 import { MarkdownCodeBlock } from "../blocks/standard/markdown-code-block";
 import {
@@ -39,7 +46,10 @@ import { MarkdownImageBlock } from "../blocks/standard/markdown-image-block";
 import { MarkdownItalicBlock } from "../blocks/standard/markdown-italic-block";
 import { MarkdownLineBreakBlock } from "../blocks/standard/markdown-line-break-block";
 import { MarkdownParagraphBlock } from "../blocks/standard/markdown-paragraph-block";
-import { MarkdownLinkBlock } from "../blocks/standard/markdown-link-block";
+import {
+  MarkdownLinkBlock,
+  MarkdownLinkTarget,
+} from "../blocks/standard/markdown-link-block";
 import { MarkdownListBlock } from "../blocks/standard/markdown-list-block";
 import { MarkdownOrderedListItemBlock } from "../blocks/standard/markdown-ordered-list-item-block";
 import {
@@ -112,7 +122,18 @@ export class MarkdownBlockParser {
         }
       }
 
-      // 1b. Code span
+      // 1b. Inline math: $content$
+      if (text[i] === "$" && text[i + 1] !== "$") {
+        const end = findSingleClose(text, i + 1, "$");
+        if (end !== -1) {
+          flush();
+          result.push(new MarkdownMathBlock(text.slice(i + 1, end)));
+          i = end + 1;
+          continue;
+        }
+      }
+
+      // 1c. Code span
       if (text[i] === "`") {
         const end = text.indexOf("`", i + 1);
         if (end !== -1) {
@@ -171,7 +192,49 @@ export class MarkdownBlockParser {
         }
       }
 
-      // 5. Auto link: <url>
+      // 5. Underline: <ins>content</ins>
+      if (text[i] === "<" && text.startsWith("<ins>", i)) {
+        const end = text.indexOf("</ins>", i + 5);
+        if (end !== -1) {
+          flush();
+          result.push(
+            new MarkdownUnderlineBlock(
+              ...this.parseInline(text.slice(i + 5, end)),
+            ),
+          );
+          i = end + 6;
+          continue;
+        }
+      }
+
+      // 6. HTML link: <a href="url" target="target">content</a>
+      if (text[i] === "<" && text.startsWith("<a ", i)) {
+        const tagEnd = text.indexOf(">", i + 3);
+        if (tagEnd !== -1) {
+          const closeTag = text.indexOf("</a>", tagEnd + 1);
+          if (closeTag !== -1) {
+            const tag = text.slice(i, tagEnd + 1);
+            const hrefMatch = tag.match(/href="([^"]*)"/);
+            const targetMatch = tag.match(/target="([^"]*)"/);
+            if (hrefMatch) {
+              flush();
+              const linkContent = text.slice(tagEnd + 1, closeTag);
+              const linkBlock = new MarkdownLinkBlock(
+                hrefMatch[1],
+                ...this.parseInline(linkContent),
+              );
+              if (targetMatch) {
+                linkBlock.target(targetMatch[1] as MarkdownLinkTarget);
+              }
+              result.push(linkBlock);
+              i = closeTag + 4;
+              continue;
+            }
+          }
+        }
+      }
+
+      // 7. Auto link: <url>
       if (text[i] === "<") {
         const closeAngle = text.indexOf(">", i + 1);
         if (closeAngle !== -1) {
@@ -343,8 +406,21 @@ export class MarkdownBlockParser {
       const match = line.match(/^>(?: )?(.*)$/);
       return match ? match[1] : line;
     });
+
+    // Detect GitHub-flavored alert: [!NOTE], [!TIP], etc.
+    let alert: GithubFlavoredBlockquoteAlert | undefined;
+    const alertMatch = stripped[0]?.match(
+      /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i,
+    );
+    if (alertMatch) {
+      alert = alertMatch[1].toLowerCase() as GithubFlavoredBlockquoteAlert;
+      stripped.shift();
+    }
+
     const content = this.parseBlocks(stripped);
-    return new MarkdownBlockquoteBlock(...content);
+    const bq = new MarkdownBlockquoteBlock(...content);
+    if (alert) bq.alert(alert);
+    return bq;
   }
 
   private parseListGroup(
@@ -461,7 +537,84 @@ export class MarkdownBlockParser {
         continue;
       }
 
-      // 2. Heading
+      // 2. Math fence
+      const mathFenceMatch = line.match(/^\$\$$/);
+      if (mathFenceMatch) {
+        const mathLines: string[] = [];
+        i++;
+        while (i < lines.length && !lines[i].match(/^\$\$$/)) {
+          mathLines.push(lines[i]);
+          i++;
+        }
+        i++; // skip closing $$
+        result.push(new MarkdownMathBlock(mathLines.join("\n")));
+        continue;
+      }
+
+      // 3. Figure with caption: <figure>...<img>...<figcaption>...</figure>
+      if (line === "<figure>") {
+        const figureLines: string[] = [];
+        i++;
+        while (i < lines.length && lines[i] !== "</figure>") {
+          figureLines.push(lines[i]);
+          i++;
+        }
+        i++; // skip closing </figure>
+        const figureContent = figureLines.join("\n");
+        const imgMatch = figureContent.match(
+          /<img src="([^"]*)"(?:\s+alt="([^"]*)")?>/,
+        );
+        const captionMatch = figureContent.match(
+          /<figcaption>([\s\S]*?)<\/figcaption>/,
+        );
+        if (imgMatch) {
+          const src = imgMatch[1];
+          const alt = imgMatch[2];
+          const imgBlock = alt
+            ? new MarkdownImageBlock(src, ...this.parseInline(alt))
+            : new MarkdownImageBlock(src);
+          if (captionMatch) {
+            imgBlock.caption(...this.parseInline(captionMatch[1]));
+          }
+          result.push(imgBlock);
+          continue;
+        }
+      }
+
+      // 4. Details: <details>...<summary>...</summary>...content...</details>
+      if (line === "<details>") {
+        const detailsLines: string[] = [];
+        i++;
+        while (i < lines.length && lines[i] !== "</details>") {
+          detailsLines.push(lines[i]);
+          i++;
+        }
+        i++; // skip closing </details>
+        const detailsContent = detailsLines.join("\n");
+        const summaryMatch = detailsContent.match(
+          /^\s*<summary>(.*?)<\/summary>/,
+        );
+        let bodyText: string;
+        if (summaryMatch) {
+          bodyText = detailsContent.slice(summaryMatch[0].length);
+        } else {
+          bodyText = detailsContent;
+        }
+        // Strip leading newline and 2-space indent from content lines
+        const bodyLines = bodyText
+          .replace(/^\n/, "")
+          .split("\n")
+          .map((l) => (l.startsWith("  ") ? l.slice(2) : l));
+        const contentBlocks = this.parseBlocks(bodyLines);
+        const detailsBlock = new MarkdownDetailsBlock(...contentBlocks);
+        if (summaryMatch && summaryMatch[1]) {
+          detailsBlock.summary(...this.parseInline(summaryMatch[1]));
+        }
+        result.push(detailsBlock);
+        continue;
+      }
+
+      // 5. Heading
       const headingMatch = line.match(/^(#{1,6}) (.+)$/);
       if (headingMatch) {
         const level = headingMatch[1].length as MarkdownHeadingLevel;
@@ -596,7 +749,16 @@ export class MarkdownBlockParser {
         continue;
       }
 
-      // 9. Footnote definition: [^id]: content
+      // 9. Comment: [content]: #
+      const commentMatch = line.match(/^\[([^\^][^\]]*)\]: #$/);
+      if (commentMatch) {
+        const content = commentMatch[1];
+        result.push(new MarkdownCommentBlock(content));
+        i++;
+        continue;
+      }
+
+      // 10. Footnote definition: [^id]: content
       const fnDefMatch = line.match(/^\[\^(.+?)\]: (.+)$/);
       if (fnDefMatch) {
         // Skip footnote definitions - they'll be handled by parse()

@@ -21,9 +21,9 @@ export class MarkdownLineBlock extends MarkdownBlock {
     return this.emptyIf(!condition);
   }
 
-  public change(
-    fn: (block: MarkdownLineBlock) => MarkdownLineBlock,
-  ): MarkdownLineBlock {
+  public change<TReturnBlock>(
+    fn: (block: typeof this) => TReturnBlock,
+  ): TReturnBlock {
     return fn(this);
   }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { b } from "../../index";
+import { b, MarkdownLinkBlock } from "../../index";
 
 describe("MarkdownLinkBlock", () => {
   it("should render a link with label", () => {
@@ -95,5 +95,59 @@ describe("MarkdownLinkBlock", () => {
       .target("_blank")
       .getMetadataTags();
     expect(tags).toContain("target=_blank");
+  });
+
+  describe("target", () => {
+    it("should render _self target", () => {
+      expect(
+        String(b.link("https://example.com", "Example").target("_self")),
+      ).toBe('<a href="https://example.com" target="_self">Example</a>');
+    });
+
+    it("should render _parent target", () => {
+      expect(
+        String(b.link("https://example.com", "Example").target("_parent")),
+      ).toBe('<a href="https://example.com" target="_parent">Example</a>');
+    });
+
+    it("should render _top target", () => {
+      expect(
+        String(b.link("https://example.com", "Example").target("_top")),
+      ).toBe('<a href="https://example.com" target="_top">Example</a>');
+    });
+
+    it("should be chainable and return this", () => {
+      const link = b.link("https://example.com", "Example");
+      const result = link.target("_blank");
+      expect(result).toBe(link);
+    });
+
+    it("should set $target property", () => {
+      const link = b.link("https://example.com", "Example").target("_blank");
+      expect(link.$target).toBe("_blank");
+    });
+
+    it("should render nested bold inside targeted link", () => {
+      expect(
+        String(
+          b.link("https://example.com", b.bold("Bold")).target("_blank"),
+        ),
+      ).toBe('<a href="https://example.com" target="_blank">**Bold**</a>');
+    });
+
+    it("should not include target in metadata tags when unset", () => {
+      const tags = b.link("https://example.com", "Example").getMetadataTags();
+      expect(tags.join(",")).not.toContain("target=");
+    });
+
+    it("should include target for each target value in metadata", () => {
+      for (const t of ["_blank", "_self", "_parent", "_top"] as const) {
+        const tags = b
+          .link("https://example.com", "Example")
+          .target(t)
+          .getMetadataTags();
+        expect(tags).toContain(`target=${t}`);
+      }
+    });
   });
 });

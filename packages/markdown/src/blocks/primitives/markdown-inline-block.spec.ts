@@ -241,6 +241,67 @@ describe("MarkdownInlineBlock", () => {
     });
   });
 
+  describe("change()", () => {
+    it("should pass the block to the callback and return the result", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.change((b) => b.bold());
+      expect(result).toBeInstanceOf(MarkdownBoldBlock);
+      expect(result.render()).toBe("**text**");
+    });
+
+    it("should allow replacing content via the callback", () => {
+      const block = new MarkdownInlineBlock("old");
+      const result = block.change((b) => {
+        b.$content = ["new"];
+        return b;
+      });
+      expect(result.render()).toBe("new");
+    });
+
+    it("should return a different block if the callback creates one", () => {
+      const block = new MarkdownInlineBlock("hello");
+      const result = block.change(() => new MarkdownInlineBlock("replaced"));
+      expect(result.render()).toBe("replaced");
+    });
+
+    it("should receive the original block as the argument", () => {
+      const block = new MarkdownInlineBlock("original");
+      block.change((received) => {
+        expect(received).toBe(block);
+        return received;
+      });
+    });
+
+    it("should be chainable with other methods", () => {
+      const block = new MarkdownInlineBlock("text");
+      const result = block.change((b) => b.bold()).italic();
+      expect(result.render()).toBe("***text***");
+    });
+
+    it("should work on empty blocks", () => {
+      const block = new MarkdownInlineBlock();
+      const result = block.change((b) => {
+        b.$content = ["filled"];
+        return b;
+      });
+      expect(result.render()).toBe("filled");
+    });
+
+    it("should allow conditional transformation", () => {
+      const shouldBold = true;
+      const block = new MarkdownInlineBlock("text");
+      const result = block.change((b) => (shouldBold ? b.bold() : b));
+      expect(result.render()).toBe("**text**");
+    });
+
+    it("should allow conditional no-op", () => {
+      const shouldBold = false;
+      const block = new MarkdownInlineBlock("text");
+      const result = block.change((b) => (shouldBold ? b.bold() : b));
+      expect(result.render()).toBe("text");
+    });
+  });
+
   describe("chaining methods", () => {
     it("bold() should return a MarkdownBoldBlock wrapping this", () => {
       const block = new MarkdownInlineBlock("text");

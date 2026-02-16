@@ -40,7 +40,7 @@ export class MarkdownMathBlock extends MarkdownInlineBlock {
 }
 
 export const math = (
-  ...lines: Array<MarkdownLineBlockContent>
+  ...line: Array<MarkdownLineBlockContent>
 ): MarkdownMathBlock => {
-  return new MarkdownMathBlock(...lines);
+  return new MarkdownMathBlock(...line);
 };

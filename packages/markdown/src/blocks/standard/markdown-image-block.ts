@@ -17,6 +17,11 @@ export class MarkdownImageBlock extends MarkdownInlineBlock {
     this.$src = src;
   }
 
+  public get isEmpty(): boolean {
+    if (this.$caption && this.$caption.length > 0) return false;
+    return super.isEmpty;
+  }
+
   public caption(...content: Array<MarkdownInlineBlockContent>): this {
     this.$caption = content;
     return this;
@@ -45,7 +50,7 @@ export class MarkdownImageBlock extends MarkdownInlineBlock {
             ? block.render(options)
             : String(block),
         )
-        .join("\n");
+        .join("");
       const altTag = content ? ` alt="${content}"` : "";
       return `<figure>\n  <img src="${this.$src}"${altTag}>\n  <figcaption>${captionContent}</figcaption>\n</figure>`;
     }

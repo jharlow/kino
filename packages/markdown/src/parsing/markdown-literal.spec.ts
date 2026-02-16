@@ -149,7 +149,7 @@ describe("MarkdownLiteral", () => {
   
     - [ ] Task item 3-3
     `.parse();
-    console.log(String(literal));
+    // console.log(String(literal));
   });
 
   it("should trim interpolated content correctly", () => {
@@ -172,7 +172,7 @@ describe("MarkdownLiteral", () => {
     ${b.list.ol("Item A", b.list.ul("Item B", "Item C"))}
     `.details("summary");
     expect(String(literal)).toBe(
-      "This is some text\nAnd this is some more text\n```hi\nHello world\nhi\n```\n- Item A\n  - Item B\n  - Item C",
+      "<details>\n  <summary>summary</summary>\n  This is some text\n  And this is some more text\n  ```hi\n  Hello world\n  hi\n  ```\n  - Item A\n    - Item B\n    - Item C\n</details>",
     );
   });
 });

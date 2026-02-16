@@ -177,6 +177,69 @@ describe("MarkdownLineBlock", () => {
     });
   });
 
+  describe("change()", () => {
+    it("should pass the block to the callback and return the result", () => {
+      const block = new MarkdownLineBlock("text");
+      const result = block.change((b) => {
+        b.$line = ["modified"];
+        return b;
+      });
+      expect(result.render()).toBe("modified");
+    });
+
+    it("should return a different block if the callback creates one", () => {
+      const block = new MarkdownLineBlock("old");
+      const result = block.change(() => new MarkdownLineBlock("new"));
+      expect(result.render()).toBe("new");
+    });
+
+    it("should receive the original block as the argument", () => {
+      const block = new MarkdownLineBlock("original");
+      block.change((received) => {
+        expect(received).toBe(block);
+        return received;
+      });
+    });
+
+    it("should allow appending content", () => {
+      const block = new MarkdownLineBlock("hello");
+      const result = block.change((b) => {
+        b.$line.push(" world");
+        return b;
+      });
+      expect(result.render()).toBe("hello world");
+    });
+
+    it("should work on empty blocks", () => {
+      const block = new MarkdownLineBlock();
+      const result = block.change((b) => {
+        b.$line = ["filled"];
+        return b;
+      });
+      expect(result.render()).toBe("filled");
+    });
+
+    it("should allow conditional transformation", () => {
+      const addSuffix = true;
+      const block = new MarkdownLineBlock("text");
+      const result = block.change((b) => {
+        if (addSuffix) b.$line.push("!");
+        return b;
+      });
+      expect(result.render()).toBe("text!");
+    });
+
+    it("should allow conditional no-op", () => {
+      const addSuffix = false;
+      const block = new MarkdownLineBlock("text");
+      const result = block.change((b) => {
+        if (addSuffix) b.$line.push("!");
+        return b;
+      });
+      expect(result.render()).toBe("text");
+    });
+  });
+
   describe("defaultIfEmpty()", () => {
     it("should set content when block is empty", () => {
       const block = new MarkdownLineBlock().defaultIfEmpty("fallback");

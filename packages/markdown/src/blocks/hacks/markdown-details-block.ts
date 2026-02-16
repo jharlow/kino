@@ -29,7 +29,7 @@ export class MarkdownDetailsBlock extends MarkdownMultilineBlock {
       .map((block) =>
         block instanceof MarkdownBlock ? block.render(options) : String(block),
       )
-      .join("\n");
+      .join("");
     const renderedContent = super.render(options);
     const indentedContent = renderedContent
       ? renderedContent
