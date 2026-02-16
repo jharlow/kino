@@ -185,16 +185,17 @@ npm install bamd
 
 ## Advice
 
+### Encode as much block data as possible
+
 The most important thing to understand about `bamd` is that the more metadata you encode in the block system, the more able it is to ensure that your documents are truly context-agnostic.
 
-`bamd` exposes many ways to achieve this, you can us
+`bamd` exposes many ways to achieve this, which allows you to pick whichever one suits your use case best. Parse encoding is best for quickly adopting existing template literals, functional encoding works best for constructing complex, conditional documents, and template encoding offers a mix of the conveniences of both syntaxes.
 
 ```ts
 const templateEncoding = b`
 ${b.h("Example document").l(2).id("example-document")}
 ${b.b("Important text")}${b.fn("example footnote")}
 `;
-console.log(templateEncoding.inspect());
 
 const functionalEncoding = b.doc(
   b.h("Example document").l(2).id("example-document"),
@@ -206,7 +207,70 @@ const parseEncoding = b`
 **Important text**[^1]
 
 [^1]: example footnote
-`;
+`.parse();
+
 expect(String(templateEncoding)).toBe(String(functionalEncoding));
 expect(String(functionalEncoding)).toBe(String(parseEncoding));
 ```
+
+### Use chaining to express conditions
+
+When creating complex documents that need to respond to state, use the provided methods to easily handle most scenarios. `.if()`, `.default()`, and `.change()` should cover most use cases.
+
+```ts
+const createUserTemplate = (
+  userName: string,
+  isWorking: boolean,
+  status: string,
+): MarkdownInlineBlock => {
+  return b
+    .p(userName)
+    .if(isWorking)
+    .default("Unknown")
+    .change((block) => {
+      if (status === "active") return block.bold();
+      if (status === "inactive") return block.strikethrough();
+      return block;
+    });
+};
+
+expect(String(createUserTemplate("", true, "unknown"))).toBe("Unknown");
+expect(String(createUserTemplate("John", false, "active"))).toBe("**Unknown**");
+expect(String(createUserTemplate("John", true, "active"))).toBe("**John**");
+expect(String(createUserTemplate("John", true, "inactive"))).toBe("~~John~~");
+expect(String(createUserTemplate("John", true, "unknown"))).toBe("John");
+```
+
+### Keep typing as simple as possible
+
+Types in `bamd` have been designed carefully to avoid complexity. There is a three-tier hierarchy of types which will help keep your I/O extremely lean when embedding/returning `bamd` blocks.
+
+```bash
+Tier 1: MarkdownBlock
+└── Tier 2: MarkdownInlineBlock | MarkdownLineBlock | MarkdownMultilineBlock
+    └── Tier 3: Specific Markdown blocks (MarkdownBoldBlock etc)
+```
+
+As a general rule, use the highest level of specificity that it is convenient for a function to accept/return. For the most part, `bamd` should type to tier 3 for you automatically, however if you need to declare type signatures yourself, it can be more convenient to duck down to the next lowest tier.
+
+```ts
+const createUserTemplate = (
+  userName: string,
+  status: string,
+): MarkdownInlineBlock => {
+  // 👆 the inferred return type is
+  //    MarkdownParagraphBlock | MarkdownBoldBlock | MarkdownStrikethroughBlock
+  //    however, it was more convenient to explicitly type the return as MarkdownInlineBlock
+  return b.p(userName).change((block) => {
+    if (status === "active") return block.bold();
+    if (status === "inactive") return block.strikethrough();
+    return block;
+  });
+};
+```
+
+### Use rendering options at call time
+
+### Convenience functions
+
+As shown throughout this doc, if you want to see the current state of any block and it's sub-blocks, you can call `.inspect()`

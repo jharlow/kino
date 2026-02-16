@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 import assert from "assert";
-import { b, MarkdownDocument } from "./index";
+import {
+  b,
+  MarkdownDocument,
+  MarkdownInlineBlock,
+  MarkdownParagraphBlock,
+} from "./index";
 
 describe("README", () => {
   test("example 1", () => {
@@ -184,7 +189,51 @@ Once you have done this, call the \`welcomeGiven\` tool.
   
     [^1]: example footnote
     `.parse();
+
     expect(String(templateEncoding)).toBe(String(functionalEncoding));
     expect(String(functionalEncoding)).toBe(String(parseEncoding));
+  });
+
+  test("example 6", () => {
+    const createUserTemplate = (
+      userName: string,
+      isWorking: boolean,
+      status: string,
+    ): MarkdownInlineBlock => {
+      return b
+        .p(userName)
+        .if(isWorking)
+        .default("Unknown")
+        .change((block) => {
+          if (status === "active") return block.bold();
+          if (status === "inactive") return block.strikethrough();
+          return block;
+        });
+    };
+
+    expect(String(createUserTemplate("", true, "unknown"))).toBe("Unknown");
+    expect(String(createUserTemplate("John", false, "active"))).toBe(
+      "**Unknown**",
+    );
+    expect(String(createUserTemplate("John", true, "active"))).toBe("**John**");
+    expect(String(createUserTemplate("John", true, "inactive"))).toBe(
+      "~~John~~",
+    );
+    expect(String(createUserTemplate("John", true, "unknown"))).toBe("John");
+  });
+
+  test("example 7", () => {
+    const createUserTemplate = (
+      userName: string,
+      status: string,
+    ): MarkdownInlineBlock => {
+      // 👆 the inferred return type is MarkdownParagraphBlock | MarkdownBoldBlock | MarkdownStrikethroughBlock
+      //    however, it was more convenient to return a MarkdownInlineBlock
+      return b.p(userName).change((block) => {
+        if (status === "active") return block.bold();
+        if (status === "inactive") return block.strikethrough();
+        return block;
+      });
+    };
   });
 });
