@@ -7,6 +7,7 @@ import {
   MarkdownMultilineBlock,
   MarkdownMultilineBlockContent,
 } from "../primitives/markdown-multiline-block";
+import { PrimitiveValue } from "../primitives/values";
 
 export class MarkdownFootnoteBlock extends MarkdownInlineBlock {
   public $identifier: string | undefined;
@@ -21,14 +22,14 @@ export class MarkdownFootnoteBlock extends MarkdownInlineBlock {
     return /^[a-zA-Z0-9]+$/.test(value);
   }
 
-  public identifier(value: string): this {
-    if (!this.validateIdentifier(value)) return this;
+  public identifier(value: PrimitiveValue): this {
+    if (!this.validateIdentifier(String(value))) return this;
     if (this.$identifier) return this;
-    this.$identifier = value;
+    this.$identifier = String(value);
     return this;
   }
 
-  public id(value: string): this {
+  public id(value: PrimitiveValue): this {
     return this.identifier(value);
   }
 

@@ -457,6 +457,8 @@ describe("literal parse integration", () => {
       expect(String(doc)).toBe("Some text[^1]\n\n[^1]: footnote content");
       const tree = b.inspect(doc);
       expect(tree).toContain("MarkdownFootnoteBlock");
+      expect(tree).toContain("footer");
+      expect(tree).toContain('"footnote content"');
     });
 
     it("should parse emoji shortcodes", () => {
@@ -1509,8 +1511,10 @@ describe("literal parse integration", () => {
       expect(tree).toContain("summary");
       expect(tree).toContain("content");
 
-      // Footnotes
+      // Footnotes with footer content
       expect(tree).toContain("MarkdownFootnoteBlock");
+      expect(tree).toContain("footer");
+      expect(tree).toContain('"This is the first footnote with details"');
 
       // Horizontal rule
       expect(tree).toContain("MarkdownHorizontalRuleBlock");

@@ -50,10 +50,10 @@ describe("MarkdownHeadingBlock", () => {
     expect(String(b.h("Title").level(2).level(4))).toBe("## Title");
   });
 
-  it("should allow level reassignment with allowReassignment", () => {
+  it("should not allow reassignment of user-set level even with allowReassignment", () => {
     expect(
       String(b.h("Title").level(2).level(4, { allowReassignment: true })),
-    ).toBe("#### Title");
+    ).toBe("## Title");
   });
 
   it("should return null for empty heading", () => {

@@ -289,12 +289,12 @@ describe("MarkdownMultilineBlock", () => {
       expect(block.render()).toBe("###### Title\nbody");
     });
 
-    it("should use allowReassignment: true when setting heading level", () => {
+    it("should respect user-set heading level over depth adjustment", () => {
       const heading = b.h("Title").level(3);
       const block = new MarkdownMultilineBlock(heading, "body");
       block.depth = 1;
-      // depth + 1 = 2, and allowReassignment overrides the previously set level 3
-      expect(block.render()).toBe("## Title\nbody");
+      // user explicitly set level 3, depth adjustment should not override it
+      expect(block.render()).toBe("### Title\nbody");
     });
   });
 

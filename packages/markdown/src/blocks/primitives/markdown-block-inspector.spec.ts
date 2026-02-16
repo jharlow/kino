@@ -487,11 +487,34 @@ describe("MarkdownBlockInspector", () => {
       expect(lines[0]).toBe("MarkdownEmojiBlock [name=heart]");
     });
 
-    it("should display a footnote block", () => {
+    it("should display a footnote block with footer content", () => {
       const block = b.footnote("some footnote content").identifier("fn1");
       const result = b.inspect(block);
-      const lines = result.split("\n");
-      expect(lines[0]).toBe("MarkdownFootnoteBlock [identifier=fn1]");
+      expect(result).toBe(
+        "MarkdownFootnoteBlock [identifier=fn1]\n└── footer\n    └── \"some footnote content\"",
+      );
+    });
+
+    it("should display a footnote block with multi-line footer", () => {
+      const block = b.footnote("Line 1", "Line 2").identifier("abc");
+      const result = b.inspect(block);
+      expect(result).toBe(
+        "MarkdownFootnoteBlock [identifier=abc]\n└── footer\n    ├── \"Line 1\"\n    └── \"Line 2\"",
+      );
+    });
+
+    it("should display a footnote block with no footer content", () => {
+      const block = b.footnote().identifier("empty");
+      const result = b.inspect(block);
+      expect(result).toBe("MarkdownFootnoteBlock [identifier=empty]");
+    });
+
+    it("should display footnote footer when nested in a document", () => {
+      const doc = b.doc(b.p("text", b.footnote("note content")));
+      const result = b.inspect(doc);
+      expect(result).toContain("MarkdownFootnoteBlock");
+      expect(result).toContain("footer");
+      expect(result).toContain('"note content"');
     });
   });
 
@@ -618,6 +641,100 @@ describe("MarkdownBlockInspector", () => {
           '            ├── "Alice"',
           '            └── "100"',
         ].join("\n"),
+      );
+    });
+  });
+
+  describe("empty string filtering", () => {
+    it("should not render empty strings in $content", () => {
+      const block = b.bold("hello", "", "world");
+      expect(b.inspect(block)).toBe(
+        ["MarkdownBoldBlock", '├── "hello"', '└── "world"'].join("\n"),
+      );
+    });
+
+    it("should not render empty strings in $line", () => {
+      const block = b.p("text", "", "more");
+      expect(b.inspect(block)).toBe(
+        ["MarkdownParagraphBlock", '├── "text"', '└── "more"'].join("\n"),
+      );
+    });
+
+    it("should not render empty strings in $lines", () => {
+      const block = b.doc(b.p("a"), b.p("b"));
+      // Manually insert an empty string into $lines
+      (block as any).$lines.splice(1, 0, "");
+      expect(b.inspect(block)).toBe(
+        [
+          "MarkdownDocument",
+          "├── MarkdownParagraphBlock",
+          '│   └── "a"',
+          "└── MarkdownParagraphBlock",
+          '    └── "b"',
+        ].join("\n"),
+      );
+    });
+
+    it("should handle all children being empty strings", () => {
+      const block = b.bold("", "");
+      expect(b.inspect(block)).toBe("MarkdownBoldBlock");
+    });
+
+    it("should handle empty string at the start", () => {
+      const block = b.p("", "text");
+      expect(b.inspect(block)).toBe(
+        ["MarkdownParagraphBlock", '└── "text"'].join("\n"),
+      );
+    });
+
+    it("should handle empty string at the end", () => {
+      const block = b.p("text", "");
+      expect(b.inspect(block)).toBe(
+        ["MarkdownParagraphBlock", '└── "text"'].join("\n"),
+      );
+    });
+
+    it("should not render newline-only strings", () => {
+      const block = b.p("text", "\n", "more");
+      expect(b.inspect(block)).toBe(
+        ["MarkdownParagraphBlock", '├── "text"', '└── "more"'].join("\n"),
+      );
+    });
+
+    it("should not render multi-newline strings", () => {
+      const block = b.p("text", "\n\n\n", "more");
+      expect(b.inspect(block)).toBe(
+        ["MarkdownParagraphBlock", '├── "text"', '└── "more"'].join("\n"),
+      );
+    });
+
+    it("should not render whitespace-only strings", () => {
+      const block = b.p("text", "   ", "more");
+      expect(b.inspect(block)).toBe(
+        ["MarkdownParagraphBlock", '├── "text"', '└── "more"'].join("\n"),
+      );
+    });
+
+    it("should not render newline-and-spaces strings", () => {
+      const block = b.p("text", "\n  ", "more");
+      expect(b.inspect(block)).toBe(
+        ["MarkdownParagraphBlock", '├── "text"', '└── "more"'].join("\n"),
+      );
+    });
+
+    it("should keep strings with content between newlines", () => {
+      const block = b.p("a", "hello\nworld", "b");
+      const result = b.inspect(block);
+      expect(result).toContain('"hello');
+      expect(result).toContain('world"');
+      expect(result).toContain('"a"');
+      expect(result).toContain('"b"');
+    });
+
+    it("should still render null and undefined", () => {
+      const block = b.p(null, "", undefined);
+      expect(b.inspect(block)).toBe(
+        ["MarkdownParagraphBlock", "├── null", "└── undefined"].join("\n"),
       );
     });
   });

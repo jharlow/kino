@@ -12,22 +12,26 @@ import { MarkdownDocument } from "../blocks/utilities/markdown-document-block";
 import { MarkdownBlockParser } from "./markdown-block-parser";
 
 export class MarkdownLiteral extends MarkdownInlineBlock {
+  private _document: MarkdownDocument;
   constructor(...line: Array<MarkdownInlineBlockContent>) {
     super(...(line as Array<MarkdownLineBlockContent>));
+    this._document = new MarkdownDocument(new MarkdownInlineBlock(...line));
   }
 
   public parse(): MarkdownDocument {
-    return new MarkdownBlockParser().parse(this.render() ?? "");
-  }
-
-  public render(options?: OptionalRenderingOptions): string | null {
-    const content = super.render(options);
-    if (content === null) return null;
-    return content;
+    // this makes sure we parse the full document, not just the inline content
+    return new MarkdownBlockParser().parse(String(this));
   }
 
   public getMetadataTags(): BlockMetadataTags {
     return super.getMetadataTags().concat(this.$trim ? ["trimmed"] : []);
+  }
+
+  // this ensures that a full document is rendered when the literal is used in a template literal or String()
+  // useful for writing markdown as you normally would, but still getting the benefits of the block system
+  [Symbol.toPrimitive](hint: "default" | "string" | "number"): string {
+    if (hint === "string") return String(this._document);
+    return super[Symbol.toPrimitive](hint);
   }
 }
 

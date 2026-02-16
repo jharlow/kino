@@ -4,6 +4,12 @@ import { PrimitiveValue } from "./values";
 export class MarkdownBlockInspector {
   constructor(private readonly block: MarkdownBlock) {}
 
+  private filterEmpty(items: any[]): any[] {
+    return items.filter(
+      (item) => typeof item !== "string" || !/^\s*$/.test(item),
+    );
+  }
+
   private getBlockMeta(node: MarkdownBlock): string {
     const tags: string[] = node.getMetadataTags();
     return tags.length > 0 ? ` [${tags.join(", ")}]` : "";
@@ -34,15 +40,24 @@ export class MarkdownBlockInspector {
     return "$src" in node && "$caption" in node && !!(node as any).$caption;
   }
 
+  private isFootnoteBlock(
+    node: MarkdownBlock,
+  ): node is MarkdownBlock & {
+    $footer: MarkdownBlock & { $lines: any[] };
+  } {
+    return "$footer" in node;
+  }
+
   private getChildren(
     node: MarkdownBlock,
   ): Array<PrimitiveValue | MarkdownBlock> {
     if (this.isTableBlock(node)) return [];
     if (this.isDetailsBlock(node)) return [];
     if (this.isCaptionedImageBlock(node)) return [];
-    if ("$lines" in node) return (node as any).$lines;
-    if ("$line" in node) return (node as any).$line;
-    if ("$content" in node) return (node as any).$content;
+    if (this.isFootnoteBlock(node)) return [];
+    if ("$lines" in node) return this.filterEmpty((node as any).$lines);
+    if ("$line" in node) return this.filterEmpty((node as any).$line);
+    if ("$content" in node) return this.filterEmpty((node as any).$content);
     return [];
   }
 
@@ -89,29 +104,34 @@ export class MarkdownBlockInspector {
     childPrefix: string,
   ): string[] {
     const lines: string[] = [];
-    const hasAlt = node.$content.length > 0;
+    const altItems = this.filterEmpty(node.$content);
+    const captionItems = this.filterEmpty(node.$caption);
+    const hasAlt = altItems.length > 0;
+    const hasCaption = captionItems.length > 0;
 
     // alt group
     if (hasAlt) {
-      const altGroupConnector = "├── ";
-      const altGroupChildPrefix = childPrefix + "│   ";
+      const altGroupConnector = hasCaption ? "├── " : "└── ";
+      const altGroupChildPrefix =
+        childPrefix + (hasCaption ? "│   " : "    ");
       lines.push(`${childPrefix}${altGroupConnector}alt`);
-      node.$content.forEach((item: any, i: number) => {
-        const isLast = i === node.$content.length - 1;
+      altItems.forEach((item: any, i: number) => {
+        const isLast = i === altItems.length - 1;
         lines.push(...this.inspectNode(item, altGroupChildPrefix, isLast));
       });
     }
 
     // caption group
-    const captionGroupConnector = "└── ";
-    const captionGroupChildPrefix = childPrefix + "    ";
-    lines.push(`${childPrefix}${captionGroupConnector}caption`);
-    node.$caption.forEach((item: any, i: number) => {
-      const isLast = i === node.$caption.length - 1;
-      lines.push(
-        ...this.inspectNode(item, captionGroupChildPrefix, isLast),
-      );
-    });
+    if (hasCaption) {
+      const captionGroupChildPrefix = childPrefix + "    ";
+      lines.push(`${childPrefix}└── caption`);
+      captionItems.forEach((item: any, i: number) => {
+        const isLast = i === captionItems.length - 1;
+        lines.push(
+          ...this.inspectNode(item, captionGroupChildPrefix, isLast),
+        );
+      });
+    }
 
     return lines;
   }
@@ -121,8 +141,12 @@ export class MarkdownBlockInspector {
     childPrefix: string,
   ): string[] {
     const lines: string[] = [];
-    const hasSummary = node.$summary && node.$summary.length > 0;
-    const hasContent = node.$lines.length > 0;
+    const summaryItems = node.$summary
+      ? this.filterEmpty(node.$summary)
+      : [];
+    const contentItems = this.filterEmpty(node.$lines);
+    const hasSummary = summaryItems.length > 0;
+    const hasContent = contentItems.length > 0;
 
     // summary group
     if (hasSummary) {
@@ -130,8 +154,8 @@ export class MarkdownBlockInspector {
       const summaryGroupChildPrefix =
         childPrefix + (hasContent ? "│   " : "    ");
       lines.push(`${childPrefix}${summaryGroupConnector}summary`);
-      node.$summary!.forEach((item: any, i: number) => {
-        const isLast = i === node.$summary!.length - 1;
+      summaryItems.forEach((item: any, i: number) => {
+        const isLast = i === summaryItems.length - 1;
         lines.push(
           ...this.inspectNode(item, summaryGroupChildPrefix, isLast),
         );
@@ -142,14 +166,31 @@ export class MarkdownBlockInspector {
     if (hasContent) {
       const contentGroupChildPrefix = childPrefix + "    ";
       lines.push(`${childPrefix}└── content`);
-      node.$lines.forEach((item: any, i: number) => {
-        const isLast = i === node.$lines.length - 1;
+      contentItems.forEach((item: any, i: number) => {
+        const isLast = i === contentItems.length - 1;
         lines.push(
           ...this.inspectNode(item, contentGroupChildPrefix, isLast),
         );
       });
     }
 
+    return lines;
+  }
+
+  private inspectFootnoteContents(
+    node: MarkdownBlock & { $footer: MarkdownBlock & { $lines: any[] } },
+    childPrefix: string,
+  ): string[] {
+    const lines: string[] = [];
+    const footerItems = this.filterEmpty(node.$footer.$lines);
+    if (footerItems.length > 0) {
+      const footerChildPrefix = childPrefix + "    ";
+      lines.push(`${childPrefix}└── footer`);
+      footerItems.forEach((item: any, i: number) => {
+        const isLast = i === footerItems.length - 1;
+        lines.push(...this.inspectNode(item, footerChildPrefix, isLast));
+      });
+    }
     return lines;
   }
 
@@ -182,6 +223,8 @@ export class MarkdownBlockInspector {
       lines.push(...this.inspectDetailsContents(node, childPrefix));
     } else if (this.isCaptionedImageBlock(node)) {
       lines.push(...this.inspectCaptionedImageContents(node, childPrefix));
+    } else if (this.isFootnoteBlock(node)) {
+      lines.push(...this.inspectFootnoteContents(node, childPrefix));
     } else {
       const children = this.getChildren(node);
       for (let i = 0; i < children.length; i++) {
@@ -209,6 +252,8 @@ export class MarkdownBlockInspector {
       lines.push(...this.inspectDetailsContents(this.block, ""));
     } else if (this.isCaptionedImageBlock(this.block)) {
       lines.push(...this.inspectCaptionedImageContents(this.block, ""));
+    } else if (this.isFootnoteBlock(this.block)) {
+      lines.push(...this.inspectFootnoteContents(this.block, ""));
     } else {
       const children = this.getChildren(this.block);
       for (let i = 0; i < children.length; i++) {

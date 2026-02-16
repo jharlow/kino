@@ -15,6 +15,7 @@ export type MarkdownHeadingLevelOptions = {
 
 export class MarkdownHeadingBlock extends MarkdownLineBlock {
   public $level: MarkdownHeadingLevel | undefined;
+  public $levelLocked: boolean = false;
   public $identifier: string | undefined;
   private readonly _defaultLevel: MarkdownHeadingLevel = 1;
   private readonly _defaultLevelOptions: MarkdownHeadingLevelOptions = {
@@ -37,8 +38,10 @@ export class MarkdownHeadingBlock extends MarkdownLineBlock {
   ): this {
     const canReassign =
       options?.allowReassignment ?? this._defaultLevelOptions.allowReassignment;
+    if (this.$levelLocked) return this;
     if (this.$level && !canReassign) return this;
     this.$level = opt;
+    if (!canReassign) this.$levelLocked = true;
     return this;
   }
 

@@ -7,10 +7,9 @@ Write context agnostic Markdown documents that look good wherever they're render
 By using a block architecture, `bamd` allows you to write complex Markdown documents that are context-agnostic and always render well. You're documents can easily interlace defaults, hide blocks conditionally, and adjust automatically when injected into other `bamd` documents.
 
 ```ts
-import * as b from "bamd";
+import { b } from "bamd";
 
 type User = { name?: string; email?: string; alternateEmail?: string };
-
 const createUserDoc = (user: User): MarkdownDocument => {
   const footnote = b
     .footnote(`Alternate email: ${user.alternateEmail}`)
@@ -24,24 +23,21 @@ const createUserDoc = (user: User): MarkdownDocument => {
     .if(user.name || user.email);
 };
 
-const user: User = {
-  email: "john.doe@example.com",
-  alternateEmail: "john.doe@work.com",
-};
+const user: User = { email: "john@email.com", alternateEmail: "john@work.com" };
 const userDoc = createUserDoc(user);
 console.log(`${userDoc}`);
 // # User details
 // The users name is unknown
-// **The users email is**: john.doe@example.com[^1]
+// **The users email is**: john@email.com[^1]
 //
-// [^1]: Alternate email: john.doe@work.com
+// [^1]: Alternate email: john@work.com
 
 const prompt = b
   .doc(
     b.heading("Instructions"),
-    b.p("Greet the user and introduce yourself as a helpful AI assistant."),
+    "Greet the user and introduce yourself as a helpful AI assistant.",
     userDoc,
-    b.p("Once you have done this, call the `welcomeGiven` tool."),
+    "Once you have done this, call the `welcomeGiven` tool.",
   )
   .setRenderingOptions({
     enforce: { bold: { style: "__" } },
@@ -56,11 +52,11 @@ console.log(String(prompt));
 //
 // The users name is unknown
 //
-// __The users email is__: john.doe@example.com[^1]
+// __The users email is__: john@email.com[^1]
 //
 // Once you have done this, call the `welcomeGiven` tool.
 //
-// [^1]: Alternate email: undefined
+// [^1]: Alternate email: john@work.com
 ```
 
 Notice that in this example:
@@ -75,25 +71,26 @@ This is the magic of a block-based architecture. By keeping a walkable block str
 ```ts
 console.log(userDoc.inspect());
 // MarkdownDocument
-// ├── MarkdownHeadingBlock [level=2]
+// ├── MarkdownHeadingBlock
 // │   └── "User details"
 // ├── MarkdownLiteral [trimmed]
 // │   ├── "The users name is "
-// │   ├── MarkdownParagraphBlock
-// │   │   └── "unknown"
+// │   └── MarkdownParagraphBlock
+// │       └── "unknown"
 // └── MarkdownLiteral [trimmed]
 //     ├── MarkdownBoldBlock
 //     │   └── "The users email is"
 //     ├── ": "
-//     ├── "john.doe@example.com"
-//     └── MarkdownFootnoteBlock [identifier=1]
+//     ├── "john@email.com"
+//     └── MarkdownFootnoteBlock
+//         └── footer
+//             └── "Alternate email: john@work.com"
 ```
 
 It also enables you to use a comfortable, chainable syntax to create your documents, which is perfect for building complex prompts programmatically.
 
 ```ts
 type PullRequest = { title: string; reviewer: string; approved: boolean };
-
 const createPrDoc = (pr: PullRequest): MarkdownDocument => {
   const reviewer = b.b(pr.reviewer).change((block) => {
     if (pr.approved) return block.strikethrough();
@@ -104,17 +101,17 @@ const createPrDoc = (pr: PullRequest): MarkdownDocument => {
 
 const pr: PullRequest = { title: "100", reviewer: "John", approved: true };
 console.log(String(createPrDoc(pr)));
-// # *100*
+// # **100**
 // Reviewer: ~~**John**~~
 
 console.log(String(createPrDoc({ ...pr, approved: false })));
-// # *100*
+// # **100**
 // Reviewer: **John**
 ```
 
 Because `bamd` allows all primitive data types as inputs, and it's resulting documents are swappable to anywhere you currently use `string`s, it's very easy to incrementally adopt `bamd`.
 
-For near instant adoption anywhere you use template literals today, just prefix them with `b`. By default, `b.md` detects injected blocks and encapsulates them (see the first example above), but if you would prefer to write markdown as you normally would, you can combine `b` with the `.parse()` method.
+For near instant adoption anywhere you use template literals today, just prefix them with `b`. By default, `b` detects injected blocks and encapsulates them (see the first example above), but if you would prefer to write markdown as you normally would, you can combine `b` with the `.parse()` method.
 
 ```ts
 //                    👇 add `b` to existing template literals
@@ -172,9 +169,44 @@ console.log(existingPrompt.inspect());
 ## Features
 
 - Full support for standard, extended, and Github Flavored Markdown syntax specifications
-- Sub-document and section handling renders your blocks perfectly whereever they're injected
+- Additional support for common Markdown hacks like underlines, comments, details, and image captions
+- Sub-document and section handling renders your blocks perfectly wherever they're injected
 - Concise chaining API that focuses on terseness
 - Simple return interfaces enable easy typing for document factories
 - Automatic parsing using `b``.parse()` enables quick adoption
 - Documents convert to strings automatically in `String()` and template literals
 - Zero dependencies and minimal bundle size
+
+## Installation
+
+```bash
+npm install bamd
+```
+
+## Advice
+
+The most important thing to understand about `bamd` is that the more metadata you encode in the block system, the more able it is to ensure that your documents are truly context-agnostic.
+
+`bamd` exposes many ways to achieve this, you can us
+
+```ts
+const templateEncoding = b`
+${b.h("Example document").l(2).id("example-document")}
+${b.b("Important text")}${b.fn("example footnote")}
+`;
+console.log(templateEncoding.inspect());
+
+const functionalEncoding = b.doc(
+  b.h("Example document").l(2).id("example-document"),
+  b.p(b.b("Important text"), b.fn("example footnote")),
+);
+
+const parseEncoding = b`
+## Example document {#example-document}
+**Important text**[^1]
+
+[^1]: example footnote
+`;
+expect(String(templateEncoding)).toBe(String(functionalEncoding));
+expect(String(functionalEncoding)).toBe(String(parseEncoding));
+```

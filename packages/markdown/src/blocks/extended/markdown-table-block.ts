@@ -26,7 +26,9 @@ export type MarkdownTableColumn<TColumnKey extends string> = {
 
 export type ColumnsDefinition<TColumnKey extends string> = Record<
   TColumnKey,
-  string | Pick<MarkdownTableColumn<TColumnKey>, "name" | "maxWidth" | "align">
+  | string
+  | (Pick<MarkdownTableColumn<TColumnKey>, "name"> &
+      Partial<Pick<MarkdownTableColumn<TColumnKey>, "maxWidth" | "align">>)
 >;
 
 export type MarkdownTableRow<TColumnKey extends string> = Record<
@@ -34,7 +36,7 @@ export type MarkdownTableRow<TColumnKey extends string> = Record<
   MarkdownTableBlockContent
 >;
 export class MarkdownTableBlock<
-  TColumnKey extends string,
+  TColumnKey extends string = string,
 > extends MarkdownMultilineBlock {
   public $columns: Array<MarkdownTableColumn<TColumnKey>>;
   private readonly _defaultColumnMaxWidth: MarkdownTableMaxWidth = undefined;
@@ -147,8 +149,7 @@ export class MarkdownTableBlock<
     width: number,
     options?: OptionalRenderingOptions,
   ): string {
-    const align =
-      options?.enforce?.table?.align ?? col.align ?? this.$style;
+    const align = options?.enforce?.table?.align ?? col.align ?? this.$style;
     const w = Math.max(3, width);
     if (align === "left") {
       const marker = ":---";
